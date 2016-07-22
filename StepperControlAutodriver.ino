@@ -2,9 +2,6 @@
 #include <Bridge.h>
 #include <Console.h>
 #include <SPI.h>
-
-//#include <BridgeServer.h>
-//#include <BridgeClient.h>
 #include "Axis.h"
 
 //Buffer REST commands
@@ -14,10 +11,6 @@ char commandBuffer[COMMANDBUFFERLENGTH];
 #define VALUEBUFFERLENGTH 255
 char valueBuffer[VALUEBUFFERLENGTH];
 
-// Listen to the default port 5555, the Yún webserver
-// will forward there all the HTTP requests you send
-//BridgeServer server;
-//BridgeClient client;
 
 //Storing axis information
 
@@ -131,7 +124,8 @@ void loop() {
   if (commandString != "") {
     process(commandString);
   }
-  //
+  
+  //Update axes
   if (axis1.getMotionState() != Axis::STOPPED )
     axis1.controlKeyframeSequence();
   else if (axis1.getMotionState() != Axis::MANUAL) {
@@ -147,38 +141,24 @@ void loop() {
   if (axis2.getMotionState() != Axis::STOPPED )
     axis2.controlKeyframeSequence();
 
-  // Get clients coming from server
-  //client = server.accept();
-
-  // There is a new client?
-  //if (client) {
-  //  debug(F("Client connect ..."));
-
-    // Process request
-    //process();
-
-    // Close connection and free resources.
-    //client.stop();
-  //}
   // Poll every 100ms
   delay(100);
 
   //Output position info
-  if (++counter >= 10 && (axis1.getMotionState() == Axis::MANUAL || axis2.getMotionState() == Axis::MANUAL)) {
-    debug("Axis1 pos: " + String(axis1.getPos()) + " / Axis2 pos: " + String(axis2.getPos()));
-    counter = 0;
-  }
+  //if (++counter >= 10 && (axis1.getMotionState() == Axis::MANUAL || axis2.getMotionState() == Axis::MANUAL)) {
+  //  debug("Axis1 pos: " + String(axis1.getPos()) + " / Axis2 pos: " + String(axis2.getPos()));
+  //  counter = 0;
+  //}
 }
 
 /// --------------------------
-// Process REST command
+// Process GUI commands
 //
 /// --------------------------
 void process(String commandString) {
   debug(F("Process ..."));
   debug(commandString);
 
-  //String commandString = client.readString();
   // Get rid of whitespace
   commandString.trim();
 
@@ -479,6 +459,12 @@ void debug(String message)
   Console.println(message);
 }
 
+
+
+/// --------------------------
+// Booting
+// 
+/// --------------------------
 //This function Loops untill all boot data is processed and bootTimeout is reached.
 // http://forum.arduino.cc/index.php?topic=306674.0
 
