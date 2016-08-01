@@ -94,7 +94,7 @@ void setup() {
   
   while(!nodejs.running()) {
     debug(F("Starting websocket server ..."));
-    nodejs.runShellCommandAsynchronously("node /mnt/sda1/arduino/WebApp/server/websockets.js");
+    nodejs.runShellCommandAsynchronously("node /mnt/sda1/arduino/webapp/server/websockets.js");
   }
   debug(F("Websocket server started ..."));
 }
