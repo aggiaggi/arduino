@@ -50,7 +50,7 @@ void setup() {
   axis1.setAccKVAL(10);
   axis1.setDecKVAL(10);
   axis1.setRunKVAL(10);
-  axis1.setHoldKVAL(17);
+  axis1.setHoldKVAL(0);//17
   axis1.setParam(INT_SPD, 0);
   axis1.setParam(ST_SLP, 52);
   axis1.setParam(FN_SLP_ACC, 85);
@@ -305,7 +305,7 @@ void process(String commandString) {
   // arduino/<axis>/stop
   else if (token == "stop") {
     debug("Stop!");
-    currentAxis->softHiZ();
+    currentAxis->stop();
     currentAxis->stopKeyframeSequence();
     
     return;
