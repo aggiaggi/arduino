@@ -38,6 +38,8 @@ class Axis:public AutoDriver {
     long getStart();
     void markEnd();
     long getEnd();
+    
+    void stop();
 
   private:
     int axisNumber;                        //axis number

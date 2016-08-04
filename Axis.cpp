@@ -82,7 +82,7 @@ void Axis::nextKeyframe() {
 
 void Axis::stopKeyframeSequence() {
   //Immediatly stop stepper
-  this->hardHiZ();
+  //this->hardHiZ();
   this->setMaxSpeed(maxSpeed);
   
   //Reset keyframe index
@@ -162,7 +162,8 @@ byte Axis::getDirection() {
     return REV;
 }
 
-
-
+void Axis::stop() {
+   this->softHiZ();
+}
 
 
