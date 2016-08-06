@@ -17,7 +17,7 @@ char valueBuffer[VALUEBUFFERLENGTH];
 //Autodriver setup
 Axis axis1(2, 4, 3);
 Axis axis2(6, 8, 7);
-//Axis axis3(12, 8, 7);
+Axis axis3(10, 12, 11);
 
 Axis* currentAxis = &axis1;
 int counter = 0;
@@ -101,8 +101,11 @@ void setup() {
 
 void loop() {
   //Communication from arduino to node server
-  int len = String(axis1.getPos()).length();
-  String(axis1.getPos()).toCharArray(valueBuffer, len);
+  //String data pos1':" + String(axis1.getPos()) + "}";
+  String data = 
+    "{\"pos1\":" + String(axis1.getPos()) + ",\"pos2\":" + String(axis2.getPos()) + ",\"pos3\":" + String(axis3.getPos()) + "}";
+  int len = data.length();
+  data.toCharArray(valueBuffer, len+1);
   if (nodejs.running()) {
     for (int i=0; i<len; i++) {
       nodejs.write(valueBuffer[i]);
