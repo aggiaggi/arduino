@@ -1,7 +1,6 @@
 #ifndef Axis_h
 #define Axis_h
 
-#include <Console.h>
 #include "SparkFunAutoDriver.h"
 #include "Keyframe.h"
 
@@ -51,7 +50,7 @@ class Axis:public AutoDriver {
     long startPosition = -2000000;                //start position
     long endPosition = 2000000;                  //end position
     
-    void debug(String message) {Console.println(message);
+    void debug(String message) {Serial.println(message);
       }
     float maxSpeed = 1200;
 };

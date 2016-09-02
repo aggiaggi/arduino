@@ -88,10 +88,10 @@ class AutoDriver
     void hardStop();
     void softHiZ();
     void hardHiZ();
-    
+    void SPIConfig();
     
   private:
-    void SPIConfig();
+    
     byte SPIXfer(byte data);
     unsigned long xferParam(unsigned long value, byte bitLen);
     unsigned long paramHandler(byte param, unsigned long value);

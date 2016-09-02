@@ -1,6 +1,6 @@
 #include <SPI.h>
 #include "SparkFunAutoDriver.h"
-#include "util/delay.h" // Turns out, using the Arduino "delay" function
+//#include "util/delay.h" // Turns out, using the Arduino "delay" function
                         //  in a library constructor causes the program to
                         //  hang if the constructor is invoked outside of
                         //  setup() or hold() (i.e., the user attempts to
@@ -12,8 +12,6 @@ AutoDriver::AutoDriver(int CSPin, int resetPin, int busyPin)
   _CSPin = CSPin;
   _resetPin = resetPin;
   _busyPin = busyPin;
-  
-  SPIConfig();
 }
 
 AutoDriver::AutoDriver(int CSPin, int resetPin)
@@ -21,8 +19,6 @@ AutoDriver::AutoDriver(int CSPin, int resetPin)
   _CSPin = CSPin;
   _resetPin = resetPin;
   _busyPin = -1;
-
-  SPIConfig();
 }
 
 void AutoDriver::SPIConfig()
@@ -41,9 +37,11 @@ void AutoDriver::SPIConfig()
  
   
   digitalWrite(_resetPin, LOW);
-  _delay_ms(5);
+  //_delay_ms(5);
+  delay(5);
   digitalWrite(_resetPin, HIGH);
-  _delay_ms(5);
+ // _delay_ms(5);
+ delay(5);
 }
 
 int AutoDriver::busyCheck(void)
