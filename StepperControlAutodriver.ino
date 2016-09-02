@@ -1,6 +1,3 @@
-#include <Process.h>
-#include <Bridge.h>
-#include <Console.h>
 #include <SPI.h>
 #include "Axis.h"
 
@@ -22,9 +19,14 @@ Axis axis3(10, 12, 11);
 Axis* currentAxis = &axis1;
 int counter = 0;
 
-Process nodejs;    // make a new Process for calling Node
 
 void setup() {
+  
+  //Perform SPIConfig in setup() function to avoid freezing of MCU
+  axis1.SPIConfig();
+  axis2.SPIConfig();
+  axis3.SPIConfig();
+  
   
   //Trinamic
   /*axis1.setAccKVAL(106);
@@ -72,59 +74,33 @@ void setup() {
   
   axis2.setAxisNumber(2);
   axis2.configStepMode(STEP_FS_64); //Step mode 1/64
-
-  //Wait for Linux
-  Serial.begin(115200); //or set it to an appropriate value (same value as set in device manager on windows)).
-  Serial1.begin(250000); 
-
-  //Check if Linux is booting
-  setupUnix(2000,20000); // void setupUnix(initTimeout, bootTimeout)
   
-  // Bridge startup
-  Bridge.begin();
-  Console.begin();
-  //while(!Console);
-  //Console.println("Console ready ...");
-  //Console.println("OC Shutdown: " + String(axis1.getOCShutdown()));
-  //Console.println("OC Threshold: " + String(axis1.getOCThreshold()));
-
-  //Timer1.stop();
-  //Timer1.initialize(100000); // set timer in microseconds
-  //Timer1.attachInterrupt( timerIsr ); // attach the service routine here
-  
-  while(!nodejs.running()) {
-    debug(F("Starting websocket server ..."));
-    nodejs.runShellCommandAsynchronously("node /mnt/sda1/arduino/webapp/server/websockets.js");
-  }
-  debug(F("Websocket server started ..."));
+  // Set up serial port between MCU and Linux
+  SerialUSB.begin(400000);
+  //Set up serial console port for debugging
+  Serial.begin(115200);
+ 
+  debug("Initialisation finished ...");
 }
 
 void loop() {
-  //Communication from arduino to node server
-  //String data pos1':" + String(axis1.getPos()) + "}";
+  
+  //Send JSON data to node server
   String data = 
     "{\"pos1\":" + String(axis1.getPos()) + ",\"pos2\":" + String(axis2.getPos()) + ",\"pos3\":" + String(axis3.getPos()) + "}";
-  int len = data.length();
-  data.toCharArray(valueBuffer, len+1);
-  if (nodejs.running()) {
-    for (int i=0; i<len; i++) {
-      nodejs.write(valueBuffer[i]);
-    }
-    //debug(valueBuffer);
-    nodejs.write('\n');
-  }
+  SerialUSB.println(data);
   
-
-  //Communication from node server to arduino
+  //Receive commands from node server
   String commandString = "";
   char c;
-  while (nodejs.available()) {
-    c = nodejs.read();
-    Console.write(c);
+  while (SerialUSB.available()) {
+    c = SerialUSB.read();
     commandString += String(c);
   }
-
-  if (commandString != "") {
+  
+  //Process command
+  if(commandString.length()>0) {
+    Serial.println(commandString);
     process(commandString);
   }
   
@@ -145,7 +121,7 @@ void loop() {
     axis2.controlKeyframeSequence();
 
   // Poll every 100ms
-  delay(100);
+  delay(1000);
 
   //Output position info
   //if (++counter >= 10 && (axis1.getMotionState() == Axis::MANUAL || axis2.getMotionState() == Axis::MANUAL)) {
@@ -371,7 +347,7 @@ int initializeKeyframeSequence(Axis* axis) {
   command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
   debug(commandBuffer);
   //Get values from datastore
-  Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+  //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
 
   //Convert value char buffer to String
   String valueString = (String)valueBuffer;
@@ -387,7 +363,7 @@ int initializeKeyframeSequence(Axis* axis) {
     command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
     debug(commandBuffer);
 
-    Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+    //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
     String positionString = (String)valueBuffer;
     unsigned long position = positionString.toInt();
     debug(String(position));
@@ -396,7 +372,7 @@ int initializeKeyframeSequence(Axis* axis) {
     command = "axis" + String(axisNumber) + ".kf" + String(i) + ".speed";
     command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
     debug(commandBuffer);
-    Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+    //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
     String speedString = (String)valueBuffer;
     float speed = speedString.toFloat();
     debug(String(speed));
@@ -405,7 +381,7 @@ int initializeKeyframeSequence(Axis* axis) {
     command = "axis" + String(axisNumber) + ".kf" + String(i) + ".acc";
     command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
     debug(commandBuffer);
-    Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+    //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
     String accString = (String)valueBuffer;
     float acc = accString.toFloat();
     debug(String(acc));
@@ -414,7 +390,7 @@ int initializeKeyframeSequence(Axis* axis) {
     command = "axis" + String(axisNumber) + ".kf" + String(i) + ".dec";
     command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
     debug(commandBuffer);
-    Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+    //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
     String decString = (String)valueBuffer;
     float dec = decString.toFloat();
     debug(String(dec));
@@ -459,57 +435,5 @@ String parseCommand(String *commandString)
 /// --------------------------
 void debug(String message)
 {
-  Console.println(message);
+  Serial.println(message);
 }
-
-
-
-/// --------------------------
-// Booting
-// 
-/// --------------------------
-//This function Loops untill all boot data is processed and bootTimeout is reached.
-// http://forum.arduino.cc/index.php?topic=306674.0
-
-void loopWhileBooting()
-{
-   bool useConsole = false;
-   do //loop as long as we are in console mode. (enter console with enterkey. Exit console by sendeing a tilde (~)
-   {
-         //Send data from USB to UART
-         int c = -1;
-         c = Serial.read();
-         if (c != -1) { 
-               useConsole |= (c == 13); //enter console mode (13 = enter key)
-               useConsole &= !(c == '~' ); //exit console mode
-              if (useConsole) Serial1.write(c);
-         }
-       
-         //Send data from UART to USB
-         c = Serial1.read();
-         if (c != -1) { Serial.write(c); } 
-        
-        //loops until bootTime timed-out.
-       // if ((millis() - ledBlinkTime) > 500) //every ~500ms
-       // { 
-      //    digitalWrite(bootLed, !digitalRead(bootLed)); //toggle led D13 (Blink)
-       //   ledBlinkTime = millis();
-      //  }        
-    } while (useConsole);
-}
-
-void setupUnix(unsigned int initTimeOut, unsigned int bootTimeOut)
-{
-  long unsigned initTimes[] = { millis(), millis() }; //set timers
-  do { //init timeout    
-    if(Serial1.available() > 0) { //run the next boot timeout block only when data is available
-      while (Serial1.available() > 0 || ((initTimes[1] + bootTimeOut) > millis())) { //boot Timeout         
-       if (Serial1.available() > 0) { initTimes[1] = millis();} //Flag boot timer        
-          loopWhileBooting(); //process serial data (or just loop until timeout is reached)
-      } //end while bootTimer    
-      initTimes[0] = millis(); //Flag init Timer
-    } //end if
-  } while (Serial1.available() > 0 || ((initTimes[0] + initTimeOut) > millis())); //serial data available within initTimeOut? (cold-boot = data / Arduino Reset = no data)
-}
-
-
