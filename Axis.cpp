@@ -1,8 +1,8 @@
 #include "Axis.h"
 
-Axis::Axis(int CSPin, int resetPin) : AutoDriver(CSPin,resetPin) {};
+Axis::Axis(int position, int CSPin, int resetPin) : AutoDriver(position,CSPin,resetPin) {};
 
-Axis::Axis(int CSPin, int resetPin, int busyPin) : AutoDriver(CSPin,resetPin,busyPin) {};
+Axis::Axis(int position, int CSPin, int resetPin, int busyPin) : AutoDriver(position,CSPin,resetPin,busyPin) {};
 
 int Axis::startKeyframeSequence() {
   debug("Starting up keyframe sequence");

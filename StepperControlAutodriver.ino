@@ -12,124 +12,139 @@ char valueBuffer[VALUEBUFFERLENGTH];
 //Storing axis information
 
 //Autodriver setup
-Axis axis1(2, 4, 3);
-Axis axis2(6, 8, 7);
-Axis axis3(10, 12, 11);
+Axis axis1(0, 2, 4, 3);
+//Axis axis2(0, 6, 8, 7);
+//Axis axis3(0, 10, 12, 11);
 
 Axis* currentAxis = &axis1;
 
 int counter = 0;
 
-
 void setup() {
-  
-  //Perform SPIConfig in setup() function to avoid freezing of MCU
-  axis1.SPIConfig();
-  axis2.SPIConfig();
-  axis3.SPIConfig();
-  
-  
-  //Trinamic
-  /*axis1.setAccKVAL(106);
-  axis1.setDecKVAL(106);
-  axis1.setRunKVAL(106);
-  axis1.setHoldKVAL(106);
-  axis1.setParam(INT_SPD, 6675);
-  axis1.setParam(ST_SLP, 68);
-  axis1.setParam(FN_SLP_ACC, 137);
-  axis1.setParam(FN_SLP_DEC, 137);*/
 
-  //Motech 24V
-  /*axis1.setAccKVAL(10);
-  axis1.setDecKVAL(10);
-  axis1.setRunKVAL(10);
-  axis1.setHoldKVAL(10);
-  axis1.setParam(INT_SPD, 4806);
-  axis1.setParam(ST_SLP, 59);
-  axis1.setParam(FN_SLP_ACC, 95);
-  axis1.setParam(FN_SLP_DEC, 95);
-  */
-   //SanyoDenki 24V
-  /*axis1.setAccKVAL(10);
-  axis1.setDecKVAL(10);
-  axis1.setRunKVAL(10);
-  axis1.setHoldKVAL(0);//17
-  axis1.setParam(INT_SPD, 0);
-  axis1.setParam(ST_SLP, 52);
-  axis1.setParam(FN_SLP_ACC, 85);
-  axis1.setParam(FN_SLP_DEC, 85);
-  */
- 
-  axis1.setAxisNumber(1);
-  axis1.configStepMode(STEP_FS_64); //Step mode 1/64
-  
-  //Wantai 28BYGH105 17V
-  axis1.setAccKVAL(20); //40
-  axis1.setDecKVAL(20);
-  axis1.setRunKVAL(20);
-  axis1.setHoldKVAL(0); 
-  axis1.setParam(INT_SPD, 37382);
-  axis1.setParam(ST_SLP, 37);
-  axis1.setParam(FN_SLP_ACC, 42);
-  axis1.setParam(FN_SLP_DEC, 42);
-  
-  axis2.setAxisNumber(2);
-  axis2.configStepMode(STEP_FS_64); //Step mode 1/64
-  
-  // Set up serial port between MCU and Linux
-  SerialUSB.begin(400000);
-  //Set up serial console port for debugging
-  Serial.begin(115200);
- 
-  debug("Axes initialisation finished ...");
+	//Setup I/O pins
+	pinMode(MOSI, OUTPUT);
+	pinMode(MISO, INPUT);
+	pinMode(2, OUTPUT);
+	pinMode(4, OUTPUT);
+	pinMode(3, INPUT);
+
+	//Set CS High
+	digitalWrite(2, HIGH);
+
+	//Reset
+	digitalWrite(4, LOW);
+	digitalWrite(4, HIGH);
+
+	SPI.begin();
+	SPI.setDataMode(SPI_MODE3);
+
+	void SPIPortConnect(SPIClass *SPIPort);
+
+
+	axis1.SPIPortConnect(&SPI);
+
+	//Trinamic
+	/*axis1.setAccKVAL(106);
+	axis1.setDecKVAL(106);
+	axis1.setRunKVAL(106);
+	axis1.setHoldKVAL(106);
+	axis1.setParam(INT_SPD, 6675);
+	axis1.setParam(ST_SLP, 68);
+	axis1.setParam(FN_SLP_ACC, 137);
+	axis1.setParam(FN_SLP_DEC, 137);*/
+
+	//Motech 24V
+	/*axis1.setAccKVAL(10);
+	axis1.setDecKVAL(10);
+	axis1.setRunKVAL(10);
+	axis1.setHoldKVAL(10);
+	axis1.setParam(INT_SPD, 4806);
+	axis1.setParam(ST_SLP, 59);
+	axis1.setParam(FN_SLP_ACC, 95);
+	axis1.setParam(FN_SLP_DEC, 95);
+	*/
+	//SanyoDenki 24V
+   /*axis1.setAccKVAL(10);
+   axis1.setDecKVAL(10);
+   axis1.setRunKVAL(10);
+   axis1.setHoldKVAL(0);//17
+   axis1.setParam(INT_SPD, 0);
+   axis1.setParam(ST_SLP, 52);
+   axis1.setParam(FN_SLP_ACC, 85);
+   axis1.setParam(FN_SLP_DEC, 85);
+   */
+
+	axis1.setAxisNumber(1);
+	axis1.configStepMode(STEP_FS_64); //Step mode 1/64
+
+	//Wantai 28BYGH105 17V
+	axis1.setAccKVAL(20); //40
+	axis1.setDecKVAL(20);
+	axis1.setRunKVAL(20);
+	axis1.setHoldKVAL(0);
+	axis1.setParam(INT_SPD, 37382);
+	axis1.setParam(ST_SLP, 37);
+	axis1.setParam(FN_SLP_ACC, 42);
+	axis1.setParam(FN_SLP_DEC, 42);
+
+	// axis2.setAxisNumber(2);
+	 //axis2.configStepMode(STEP_FS_64); //Step mode 1/64
+
+	 // Set up serial port between MCU and Linux
+	SerialUSB.begin(400000);
+	//Set up serial console port for debugging
+	Serial.begin(115200);
+
+	debug("Axes initialisation finished ...");
 }
 
 void loop() {
-  
-  //Send JSON data to node server
-  String data = 
-    "{\"pos1\":" + String(axis1.getPos()) + ",\"pos2\":" + String(axis2.getPos()) + ",\"pos3\":" + String(axis3.getPos()) + "}";
-  SerialUSB.println(data);
-  
-  //Receive commands from node server
-  String commandString = "";
-  char c;
-  while (SerialUSB.available()) {
-    c = SerialUSB.read();
-    commandString += String(c);
-  }
-  
-  //Process command
-  if(commandString.length()>0) {
-    process(commandString);
-  }
-  
-  //Update axes
-  /*
-  if (axis1.getMotionState() != Axis::STOPPED )
-    axis1.controlKeyframeSequence();
-  else if (axis1.getMotionState() != Axis::MANUAL) {
-    byte dir = axis1.getDirection();
-    long pos = axis1.getPos();
-    if ((dir == FWD && pos >= axis1.getEnd()) || (dir == REV && pos <= axis1.getStart()) ) 
-    {
-      axis1.hardStop();
-      debug("Axis Hard Stop!");
-    }
-  }
 
-  if (axis2.getMotionState() != Axis::STOPPED )
-    axis2.controlKeyframeSequence();
-  */
-  
-  // Poll every 100ms
-  delay(300);
+	//Send JSON data to node server
+	String data =
+		"{\"pos1\":" + String(axis1.getPos()) + ",\"pos2\":" + String("-123") + ",\"pos3\":" + String(-123) + "}";
+	SerialUSB.println(data);
 
-  //Output position info
-  //if (++counter >= 10 && (axis1.getMotionState() == Axis::MANUAL || axis2.getMotionState() == Axis::MANUAL)) {
-  //  debug("Axis1 pos: " + String(axis1.getPos()) + " / Axis2 pos: " + String(axis2.getPos()));
-  //  counter = 0;
-  //}
+	//Receive commands from node server
+	String commandString = "";
+	char c;
+	while (SerialUSB.available()) {
+		c = SerialUSB.read();
+		commandString += String(c);
+	}
+
+	//Process command
+	if (commandString.length() > 0) {
+		process(commandString);
+	}
+
+	//Update axes
+	/*
+	if (axis1.getMotionState() != Axis::STOPPED )
+	  axis1.controlKeyframeSequence();
+	else if (axis1.getMotionState() != Axis::MANUAL) {
+	  byte dir = axis1.getDirection();
+	  long pos = axis1.getPos();
+	  if ((dir == FWD && pos >= axis1.getEnd()) || (dir == REV && pos <= axis1.getStart()) )
+	  {
+		axis1.hardStop();
+		debug("Axis Hard Stop!");
+	  }
+	}
+
+	if (axis2.getMotionState() != Axis::STOPPED )
+	  axis2.controlKeyframeSequence();
+	*/
+
+	// Poll every 100ms
+	delay(300);
+
+	//Output position info
+	//if (++counter >= 10 && (axis1.getMotionState() == Axis::MANUAL || axis2.getMotionState() == Axis::MANUAL)) {
+	//  debug("Axis1 pos: " + String(axis1.getPos()) + " / Axis2 pos: " + String(axis2.getPos()));
+	//  counter = 0;
+	//}
 }
 
 /// --------------------------
@@ -137,196 +152,194 @@ void loop() {
 //
 /// --------------------------
 void process(String commandString) {
-  debug(F("Process ..."));
-  debug(commandString);
+	debug(F("Process ..."));
+	debug(commandString);
 
-  // Get rid of whitespace
-  commandString.trim();
+	// Get rid of whitespace
+	commandString.trim();
 
-  //Parse axis
-  String token = parseCommand(&commandString);
-  // is "start" command?
-  // arduino/start
-  if (token == "start") {
-    debug("Start!");
-    int result = initializeKeyframeSequence(&axis1);
-    result += initializeKeyframeSequence(&axis2);
-    if (result == 0) {
-      axis1.startKeyframeSequence();
-      axis2.startKeyframeSequence();
-    }
-    else
-      debug(F("Problems starting motion program!"));
+	//Parse axis
+	String token = parseCommand(&commandString);
+	// is "start" command?
+	// arduino/start
+	if (token == "start") {
+		debug("Start!");
+		int result = initializeKeyframeSequence(&axis1);
+		//result += initializeKeyframeSequence(&axis2);
+		if (result == 0) {
+			axis1.startKeyframeSequence();
+			//axis2.startKeyframeSequence();
+		}
+		else
+			debug(F("Problems starting motion program!"));
 
-    return;
-  }
+		return;
+	}
 
-  // is "stop" command?
-  // arduino/stop
-  else if (token == "stop") {
-    debug("Stop!");
-    axis1.hardHiZ();
-    axis1.stopKeyframeSequence();
+	// is "stop" command?
+	// arduino/stop
+	else if (token == "stop") {
+		debug("Stop!");
+		axis1.hardHiZ();
+		axis1.stopKeyframeSequence();
 
-    axis2.hardHiZ();
-    axis2.stopKeyframeSequence();
+		//axis2.hardHiZ();
+		//axis2.stopKeyframeSequence();
 
-    return;
-  }
-  
-  else if (token == "1")
-    currentAxis = &axis1;
-  else if (token == "2")
-    currentAxis = &axis2;
-  else
-    return;
+		return;
+	}
 
-  //Parse next token
-   token = parseCommand(&commandString);
-      
-  // is "move" command?
-  // arduino/<axis>/move/<'FWD'|'REV'>/<NUMBER_OF_STEPS>
-  if (token == "move") {
-    byte dir = FWD;
-    unsigned long numberOfSteps = 0;
+	else if (token == "1")
+		currentAxis = &axis1;
+	else
+		return;
 
-    if (commandString != "") {
-      //debug("commandString: " + commandString);
+	//Parse next token
+	token = parseCommand(&commandString);
 
-      //Parse direction token
-      token = parseCommand(&commandString);
-      if (token == "REV") {
-        dir = REV;
-      }
+	// is "move" command?
+	// arduino/<axis>/move/<'FWD'|'REV'>/<NUMBER_OF_STEPS>
+	if (token == "move") {
+		byte dir = FWD;
+		unsigned long numberOfSteps = 0;
 
-      //Parse number of steps token
-      if (commandString != "") {
-        token = parseCommand(&commandString);
-        numberOfSteps = token.toInt();
-      }
-      byte stepMode = currentAxis->getStepMode();
-      debug("Move dir " + String(dir) + " / Steps " + String(numberOfSteps));
-      currentAxis->AutoDriver::move(dir, numberOfSteps << (stepMode % 8));
-    }
-  }
+		if (commandString != "") {
+			//debug("commandString: " + commandString);
 
-  // is "RUN" command?
-  // arduino/<axis>/run/<'FWD'|'REV'>/<STEPS_PER_SECOND>
-  else if (token == "run") {
-    byte dir = FWD;
-    float runSpeed = 0.0;
+			//Parse direction token
+			token = parseCommand(&commandString);
+			if (token == "REV") {
+				dir = REV;
+			}
 
-    //Parse speed token
-    if (commandString != "") {
-      //debug("commandString: " + commandString);
-      token = parseCommand(&commandString);
-      runSpeed = token.toFloat();
-      if  (runSpeed < 0) {
-        runSpeed = -1.0 * runSpeed;
-        dir = REV;
-      }
-    }
-    debug("Run dir " + String(dir) + " / Speed " + String(runSpeed));
-    currentAxis->AutoDriver::run(dir, runSpeed);
-  }
-  
+			//Parse number of steps token
+			if (commandString != "") {
+				token = parseCommand(&commandString);
+				numberOfSteps = token.toInt();
+			}
+			byte stepMode = currentAxis->getStepMode();
+			debug("Move dir " + String(dir) + " / Steps " + String(numberOfSteps));
+			currentAxis->AutoDriver::move(dir, numberOfSteps << (stepMode % 8));
+		}
+	}
 
-  // is Acceleration command?
-  // arduino/<axis>/acc/<?PARAM?>
-  else if (token == "acc") {
-    if (commandString != "") {
-      //Parse parameter token
-      String paramString = parseCommand(&commandString);
-      float param = paramString.toFloat();
+	// is "RUN" command?
+	// arduino/<axis>/run/<'FWD'|'REV'>/<STEPS_PER_SECOND>
+	else if (token == "run") {
+		byte dir = FWD;
+		float runSpeed = 0.0;
 
-      debug("Set acceleration for axis" + String(currentAxis->getAxisNumber()) + " to " + paramString);
-      currentAxis->setAcc(param);
-    }
-    else {
-      //return current accelleration parameter
-      //client.print(currentAxis->getAcc());
-    }
-  }
+		//Parse speed token
+		if (commandString != "") {
+			//debug("commandString: " + commandString);
+			token = parseCommand(&commandString);
+			runSpeed = token.toFloat();
+			if (runSpeed < 0) {
+				runSpeed = -1.0 * runSpeed;
+				dir = REV;
+			}
+		}
+		debug("Run dir " + String(dir) + " / Speed " + String(runSpeed));
+		currentAxis->AutoDriver::run(dir, runSpeed);
+	}
 
-  // is Deceleration command?
-  // arduino/<axis>/dec/<?PARAM?>
-  else if (token == "dec") {
-    if (commandString != "") {
-      //Parse parameter token
-      String paramString = parseCommand(&commandString);
-      float param = paramString.toFloat();
 
-      debug("Set deceleration for axis" + String(currentAxis->getAxisNumber()) + " to " + paramString);
-      currentAxis->setDec(param);
-    }
-    else {
-      //return current deceleration parameter
-      //client.print(currentAxis->getDec());
-    }
-  }
+	// is Acceleration command?
+	// arduino/<axis>/acc/<?PARAM?>
+	else if (token == "acc") {
+		if (commandString != "") {
+			//Parse parameter token
+			String paramString = parseCommand(&commandString);
+			float param = paramString.toFloat();
 
-  // is Speed command?
-  // arduino/<axis>/speed/<?PARAM?>
-  else if (token == "speed") {
-    if (commandString != "") {
-      //Parse parameter token
-      String paramString = parseCommand(&commandString);
-      float param = paramString.toFloat();
+			debug("Set acceleration for axis" + String(currentAxis->getAxisNumber()) + " to " + paramString);
+			currentAxis->setAcc(param);
+		}
+		else {
+			//return current accelleration parameter
+			//client.print(currentAxis->getAcc());
+		}
+	}
 
-      debug("Set max speed to " + paramString);
-      currentAxis->setMaxSpeed(param);
-    }
-    else {
-      //return current max speed parameter
-      //client.print(currentAxis->getMaxSpeed());
-    }
-  }
+	// is Deceleration command?
+	// arduino/<axis>/dec/<?PARAM?>
+	else if (token == "dec") {
+		if (commandString != "") {
+			//Parse parameter token
+			String paramString = parseCommand(&commandString);
+			float param = paramString.toFloat();
 
-  // is "stop" command?
-  // arduino/<axis>/stop
-  else if (token == "stop") {
-    debug("Stop!");
-    currentAxis->stop();
-    currentAxis->stopKeyframeSequence();
-    
-    return;
-  }
+			debug("Set deceleration for axis" + String(currentAxis->getAxisNumber()) + " to " + paramString);
+			currentAxis->setDec(param);
+		}
+		else {
+			//return current deceleration parameter
+			//client.print(currentAxis->getDec());
+		}
+	}
 
-  //Mark home command
-  else if (token == "sethome") {
-    debug("Set Home!");
-    currentAxis->resetPos();
-  }
+	// is Speed command?
+	// arduino/<axis>/speed/<?PARAM?>
+	else if (token == "speed") {
+		if (commandString != "") {
+			//Parse parameter token
+			String paramString = parseCommand(&commandString);
+			float param = paramString.toFloat();
 
-  //Go home command
-  else if (token == "gohome") {
-    debug("Go Home!");
-    currentAxis->goHome();
-  }
+			debug("Set max speed to " + paramString);
+			currentAxis->setMaxSpeed(param);
+		}
+		else {
+			//return current max speed parameter
+			//client.print(currentAxis->getMaxSpeed());
+		}
+	}
 
-  //Mark start command
-  else if (token == "markstart") {
-    debug("Mark Start!");
-    currentAxis->markStart();
-  }
+	// is "stop" command?
+	// arduino/<axis>/stop
+	else if (token == "stop") {
+		debug("Stop!");
+		currentAxis->stop();
+		currentAxis->stopKeyframeSequence();
 
-  //Mark end command
-  else if (token == "markend") {
-    debug("Mark End!");
-    currentAxis->markEnd();
-  }
+		return;
+	}
 
-  //Set Keyframe command
-  else if (token == "setkeyframe") {
-    debug("Set Keyframe!");
-    
-  }
+	//Mark home command
+	else if (token == "sethome") {
+		debug("Set Home!");
+		currentAxis->resetPos();
+	}
 
-  //Go Keyframe command
-  else if (token == "gokeyframe") {
-    debug("Go Keyframe!");
-    
-  }
+	//Go home command
+	else if (token == "gohome") {
+		debug("Go Home!");
+		currentAxis->goHome();
+	}
+
+	//Mark start command
+	else if (token == "markstart") {
+		debug("Mark Start!");
+		currentAxis->markStart();
+	}
+
+	//Mark end command
+	else if (token == "markend") {
+		debug("Mark End!");
+		currentAxis->markEnd();
+	}
+
+	//Set Keyframe command
+	else if (token == "setkeyframe") {
+		debug("Set Keyframe!");
+
+	}
+
+	//Go Keyframe command
+	else if (token == "gokeyframe") {
+		debug("Go Keyframe!");
+
+	}
 }
 
 ///--------------------------------
@@ -339,70 +352,70 @@ void process(String commandString) {
 //
 ///--------------------------------
 int initializeKeyframeSequence(Axis* axis) {
-  int axisNumber = axis->getAxisNumber();
+	int axisNumber = axis->getAxisNumber();
 
-  //Getting number of keyframes
-  //Constructing datastore command string
-  String command = "axis" + String(axisNumber) + ".numberofkeyframes";
+	//Getting number of keyframes
+	//Constructing datastore command string
+	String command = "axis" + String(axisNumber) + ".numberofkeyframes";
 
-  //Convert command string to char array
-  command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-  debug(commandBuffer);
-  //Get values from datastore
-  //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+	//Convert command string to char array
+	command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
+	debug(commandBuffer);
+	//Get values from datastore
+	//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
 
-  //Convert value char buffer to String
-  String valueString = (String)valueBuffer;
+	//Convert value char buffer to String
+	String valueString = (String)valueBuffer;
 
-  //Convert value string to int
-  int numberOfKeyframes = valueString.toInt();
-  axis->setNumberOfKeyframes(numberOfKeyframes);
-  debug(String(numberOfKeyframes));
+	//Convert value string to int
+	int numberOfKeyframes = valueString.toInt();
+	axis->setNumberOfKeyframes(numberOfKeyframes);
+	debug(String(numberOfKeyframes));
 
-  for (int i = 1; i <= numberOfKeyframes; i++) {
-    //read keyframe position
-    command = "axis" + String(axisNumber) + ".kf" + String(i) + ".position";
-    command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-    debug(commandBuffer);
+	for (int i = 1; i <= numberOfKeyframes; i++) {
+		//read keyframe position
+		command = "axis" + String(axisNumber) + ".kf" + String(i) + ".position";
+		command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
+		debug(commandBuffer);
 
-    //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-    String positionString = (String)valueBuffer;
-    unsigned long position = positionString.toInt();
-    debug(String(position));
+		//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+		String positionString = (String)valueBuffer;
+		unsigned long position = positionString.toInt();
+		debug(String(position));
 
-    //read keyframe speed
-    command = "axis" + String(axisNumber) + ".kf" + String(i) + ".speed";
-    command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-    debug(commandBuffer);
-    //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-    String speedString = (String)valueBuffer;
-    float speed = speedString.toFloat();
-    debug(String(speed));
+		//read keyframe speed
+		command = "axis" + String(axisNumber) + ".kf" + String(i) + ".speed";
+		command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
+		debug(commandBuffer);
+		//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+		String speedString = (String)valueBuffer;
+		float speed = speedString.toFloat();
+		debug(String(speed));
 
-    //read keyframe accelleration
-    command = "axis" + String(axisNumber) + ".kf" + String(i) + ".acc";
-    command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-    debug(commandBuffer);
-    //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-    String accString = (String)valueBuffer;
-    float acc = accString.toFloat();
-    debug(String(acc));
+		//read keyframe accelleration
+		command = "axis" + String(axisNumber) + ".kf" + String(i) + ".acc";
+		command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
+		debug(commandBuffer);
+		//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+		String accString = (String)valueBuffer;
+		float acc = accString.toFloat();
+		debug(String(acc));
 
-    //read keyframe deceleration
-    command = "axis" + String(axisNumber) + ".kf" + String(i) + ".dec";
-    command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-    debug(commandBuffer);
-    //Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-    String decString = (String)valueBuffer;
-    float dec = decString.toFloat();
-    debug(String(dec));
+		//read keyframe deceleration
+		command = "axis" + String(axisNumber) + ".kf" + String(i) + ".dec";
+		command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
+		debug(commandBuffer);
+		//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
+		String decString = (String)valueBuffer;
+		float dec = decString.toFloat();
+		debug(String(dec));
 
-    axis->getKeyframe(i)->setPosition(position);
-    axis->getKeyframe(i)->setSpeed(speed);
-    axis->getKeyframe(i)->setAcc(acc);
-    axis->getKeyframe(i)->setDec(dec);
-  }
-  return 0;
+		axis->getKeyframe(i)->setPosition(position);
+		axis->getKeyframe(i)->setSpeed(speed);
+		axis->getKeyframe(i)->setAcc(acc);
+		axis->getKeyframe(i)->setDec(dec);
+	}
+	return 0;
 }
 
 /// --------------------------
@@ -412,23 +425,23 @@ int initializeKeyframeSequence(Axis* axis) {
 /// --------------------------
 String parseCommand(String *commandString)
 {
-  String command = "";
+	String command = "";
 
-  //Does commandString contain more tokens separated by "/"?
-  int pos = commandString->indexOf('/');
-  if (pos  != -1) { //Yes
-    //Extract command token
-    command = commandString->substring(0, commandString->indexOf("/"));
+	//Does commandString contain more tokens separated by "/"?
+	int pos = commandString->indexOf('/');
+	if (pos != -1) { //Yes
+	  //Extract command token
+		command = commandString->substring(0, commandString->indexOf("/"));
 
-    //Remove token from commandString
-    *commandString = commandString->substring((commandString->indexOf("/") + 1));
-  }
-  else { //No
-    command = *commandString;
-    *commandString = "";
-  }
+		//Remove token from commandString
+		*commandString = commandString->substring((commandString->indexOf("/") + 1));
+	}
+	else { //No
+		command = *commandString;
+		*commandString = "";
+	}
 
-  return command;
+	return command;
 }
 
 /// --------------------------
@@ -437,5 +450,5 @@ String parseCommand(String *commandString)
 /// --------------------------
 void debug(String message)
 {
-  Serial.println(message);
+	Serial.println(message);
 }

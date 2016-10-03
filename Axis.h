@@ -13,8 +13,8 @@ class Axis:public AutoDriver {
     enum MotionState {STOPPED, INIT, SEQUENCING, LASTKEYFRAME, MANUAL};
     enum ResultCode {SUCCESS, NOKEYFRAMES};
   
-    Axis(int CSPin, int resetPin);
-    Axis(int CSPin, int resetPin, int busyPin);
+    Axis(int position, int CSPin, int resetPin);
+    Axis(int position, int CSPin, int resetPin, int busyPin);
 
     void setAxisNumber(int number) {this->axisNumber = number;}
     int getAxisNumber() {return this->axisNumber;}

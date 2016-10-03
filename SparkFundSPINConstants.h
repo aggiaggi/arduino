@@ -163,7 +163,7 @@
 #define ABS_POS              0x01
 #define EL_POS               0x02
 #define MARK                 0x03
-#define AD_SPEED                0x04	//Renamed from SPEED due to name collesion
+#define SPEED                0x04
 #define ACC                  0x05
 #define DECEL                0x06
 #define MAX_SPEED            0x07
@@ -205,7 +205,7 @@
 #define HARD_STOP            0xB8
 #define SOFT_HIZ             0xA0
 #define HARD_HIZ             0xA8
-#define AD_GET_STATUS           0xD0
+#define GET_STATUS           0xD0
 
 #endif
 

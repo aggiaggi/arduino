@@ -69,7 +69,7 @@ void AutoDriver::run(byte dir, float stepsPerSec)
   byte* bytePointer = (byte*)&integerSpeed;
   // Next, we'll iterate through a for loop, indexing across the bytes in
   //  integerSpeed starting with byte 2 and ending with byte 0.
-  for (int i = 2; i >= 0; i--)
+  for (int8_t i = 2; i >= 0; i--)
   {
     SPIXfer(bytePointer[i]);
   }
@@ -95,7 +95,7 @@ void AutoDriver::move(byte dir, unsigned long numSteps)
   if (numSteps > 0x3FFFFF) numSteps = 0x3FFFFF;
   // See run() for an explanation of what's going on here.
   byte* bytePointer = (byte*)&numSteps;
-  for (int i = 2; i >= 0; i--)
+  for (int8_t i = 2; i >= 0; i--)
   {
     SPIXfer(bytePointer[i]);
   }
@@ -110,7 +110,7 @@ void AutoDriver::goTo(long pos)
   if (pos > 0x3FFFFF) pos = 0x3FFFFF;
   // See run() for an explanation of what's going on here.
   byte* bytePointer = (byte*)&pos;
-  for (int i = 2; i >= 0; i--)
+  for (int8_t i = 2; i >= 0; i--)
   {
     SPIXfer(bytePointer[i]);
   }
@@ -123,7 +123,7 @@ void AutoDriver::goToDir(byte dir, long pos)
   if (pos > 0x3FFFFF) pos = 0x3FFFFF;
   // See run() for an explanation of what's going on here.
   byte* bytePointer = (byte*)&pos;
-  for (int i = 2; i >= 0; i--)
+  for (int8_t i = 2; i >= 0; i--)
   {
     SPIXfer(bytePointer[i]);
   }
@@ -142,7 +142,7 @@ void AutoDriver::goUntil(byte action, byte dir, float stepsPerSec)
   if (integerSpeed > 0x3FFFFF) integerSpeed = 0x3FFFFF;
   // See run() for an explanation of what's going on here.
   byte* bytePointer = (byte*)&integerSpeed;
-  for (int i = 2; i >= 0; i--)
+  for (int8_t i = 2; i >= 0; i--)
   {
     SPIXfer(bytePointer[i]);
   }
@@ -233,7 +233,7 @@ int AutoDriver::getStatus()
 {
   int temp = 0;
   byte* bytePointer = (byte*)&temp;
-  SPIXfer(AD_GET_STATUS);
+  SPIXfer(GET_STATUS);
   bytePointer[1] = SPIXfer(0);
   bytePointer[0] = SPIXfer(0);
   return temp;
