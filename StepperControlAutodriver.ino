@@ -2,7 +2,7 @@
 #include "Axis.h"
 
 //Buffer REST commands
-#define COMMANDBUFFERLENGTH 128
+#define COMMANDBUFFERLENGTH 512
 char commandBuffer[COMMANDBUFFERLENGTH];
 //Buffer for REST values
 #define VALUEBUFFERLENGTH 255
@@ -17,6 +17,7 @@ Axis axis2(6, 8, 7);
 Axis axis3(10, 12, 11);
 
 Axis* currentAxis = &axis1;
+
 int counter = 0;
 
 
@@ -49,7 +50,7 @@ void setup() {
   axis1.setParam(FN_SLP_DEC, 95);
   */
    //SanyoDenki 24V
-  axis1.setAccKVAL(10);
+  /*axis1.setAccKVAL(10);
   axis1.setDecKVAL(10);
   axis1.setRunKVAL(10);
   axis1.setHoldKVAL(0);//17
@@ -57,20 +58,20 @@ void setup() {
   axis1.setParam(ST_SLP, 52);
   axis1.setParam(FN_SLP_ACC, 85);
   axis1.setParam(FN_SLP_DEC, 85);
-  
+  */
  
   axis1.setAxisNumber(1);
   axis1.configStepMode(STEP_FS_64); //Step mode 1/64
   
-  //Wantai 28BYGH105 24V
-  axis2.setAccKVAL(56); //28
-  axis2.setDecKVAL(56);
-  axis2.setRunKVAL(56);
-  axis2.setHoldKVAL(56);
-  axis2.setParam(INT_SPD, 37382);
-  axis2.setParam(ST_SLP, 27);
-  axis2.setParam(FN_SLP_ACC, 30);
-  axis2.setParam(FN_SLP_DEC, 30);
+  //Wantai 28BYGH105 17V
+  axis1.setAccKVAL(20); //40
+  axis1.setDecKVAL(20);
+  axis1.setRunKVAL(20);
+  axis1.setHoldKVAL(0); 
+  axis1.setParam(INT_SPD, 37382);
+  axis1.setParam(ST_SLP, 37);
+  axis1.setParam(FN_SLP_ACC, 42);
+  axis1.setParam(FN_SLP_DEC, 42);
   
   axis2.setAxisNumber(2);
   axis2.configStepMode(STEP_FS_64); //Step mode 1/64
@@ -80,7 +81,7 @@ void setup() {
   //Set up serial console port for debugging
   Serial.begin(115200);
  
-  debug("Initialisation finished ...");
+  debug("Axes initialisation finished ...");
 }
 
 void loop() {
@@ -100,11 +101,11 @@ void loop() {
   
   //Process command
   if(commandString.length()>0) {
-    Serial.println(commandString);
     process(commandString);
   }
   
   //Update axes
+  /*
   if (axis1.getMotionState() != Axis::STOPPED )
     axis1.controlKeyframeSequence();
   else if (axis1.getMotionState() != Axis::MANUAL) {
@@ -119,9 +120,10 @@ void loop() {
 
   if (axis2.getMotionState() != Axis::STOPPED )
     axis2.controlKeyframeSequence();
-
+  */
+  
   // Poll every 100ms
-  delay(1000);
+  delay(300);
 
   //Output position info
   //if (++counter >= 10 && (axis1.getMotionState() == Axis::MANUAL || axis2.getMotionState() == Axis::MANUAL)) {
