@@ -136,22 +136,32 @@ byte Axis::getDirection(Keyframe* kf1, Keyframe* kf2) {
     return REV;
 }
 
-void Axis::markStart() {
-  this->startPosition = this->getPos();
-  debug(String(this->getDirection()));
+void Axis::markStartSoftStop() {
+  this->startSoftStop = this->getPos();
+  debug(String(this->getPos()));
 }
 
-long Axis::getStart() {
-  return startPosition;
+void Axis::setStartSoftStop(long pos) {
+	this->startSoftStop = pos;
+	debug(String(pos));
 }
 
-void Axis::markEnd() {
-   this->endPosition = this->getPos();
-   debug(String(this->getDirection()));
+long Axis::getStartSoftStop() {
+  return startSoftStop;
 }
 
-long Axis::getEnd() {
-  return endPosition;
+void Axis::markEndSoftStop() {
+   this->endSoftStop = this->getPos();
+   debug(String(this->getPos()));
+}
+
+void Axis::setEndSoftStop(long pos) {
+	this->endSoftStop = pos;
+	debug(String(pos));
+}
+
+long Axis::getEndSoftStop() {
+  return endSoftStop;
 }
 
 byte Axis::getDirection() {
@@ -166,4 +176,7 @@ void Axis::stop() {
    this->softHiZ();
 }
 
-
+/*bool Axis::getStopsEnabled() {
+	return this->stopsEnabled;
+}
+*/

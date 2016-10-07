@@ -120,22 +120,22 @@ void loop() {
 	}
 
 	//Update axes
-	/*
-	if (axis1.getMotionState() != Axis::STOPPED )
+	
+	/*if (axis1.getMotionState() != Axis::STOPPED )
 	  axis1.controlKeyframeSequence();
-	else if (axis1.getMotionState() != Axis::MANUAL) {
+	else if ((axis1.getMotionState() != Axis::MANUAL) && (axis1.getStopsEnabled())) {
 	  byte dir = axis1.getDirection();
 	  long pos = axis1.getPos();
-	  if ((dir == FWD && pos >= axis1.getEnd()) || (dir == REV && pos <= axis1.getStart()) )
+	  if ((dir == FWD && pos >= axis1.getEndSoftStop()) || (dir == REV && pos <= axis1.getStartSoftStop()) )
 	  {
 		axis1.hardStop();
 		debug("Axis Hard Stop!");
 	  }
-	}
+	}*/
 
-	if (axis2.getMotionState() != Axis::STOPPED )
-	  axis2.controlKeyframeSequence();
-	*/
+	//if (axis2.getMotionState() != Axis::STOPPED )
+	//  axis2.controlKeyframeSequence();
+	
 
 	// Poll every 100ms
 	delay(300);
@@ -162,6 +162,7 @@ void process(String commandString) {
 	String token = parseCommand(&commandString);
 	// is "start" command?
 	// arduino/start
+	//switch(tokrn)
 	if (token == "start") {
 		debug("Start!");
 		int result = initializeKeyframeSequence(&axis1);
@@ -243,6 +244,26 @@ void process(String commandString) {
 		currentAxis->AutoDriver::run(dir, runSpeed);
 	}
 
+	// is "GO" command?
+	// arduino/<axis>/go/<POS>
+	else if (token == "go") {
+		
+		long pos = 0;
+		//Parse speed token
+		if (commandString != "") {
+			//debug("commandString: " + commandString);
+			token = parseCommand(&commandString);
+			pos = token.toInt();
+		}
+		byte dir;
+		if (pos >= currentAxis->getPos())
+			dir = FWD;
+		else
+			dir = REV;
+		debug("Go Position " + String(pos) + " / Dir " + String(dir));
+		currentAxis->AutoDriver::goToDir(dir, pos);
+	}
+
 
 	// is Acceleration command?
 	// arduino/<axis>/acc/<?PARAM?>
@@ -317,17 +338,42 @@ void process(String commandString) {
 		currentAxis->goHome();
 	}
 
-	//Mark start command
-	else if (token == "markstart") {
-		debug("Mark Start!");
-		currentAxis->markStart();
+	//Mark start soft stop command
+	else if (token == "markstartsoftstop") {
+		debug("Mark Start Stop!");
+		currentAxis->markStartSoftStop();
 	}
 
-	//Mark end command
-	else if (token == "markend") {
-		debug("Mark End!");
-		currentAxis->markEnd();
+	//Mark end soft stop command
+	else if (token == "markendsoftstop") {
+		debug("Mark End Stop!");
+		currentAxis->markEndSoftStop();
 	}
+
+	//Go to start soft stop
+	else if (token == "gostartsoftstop") {
+		debug("Go Start Soft Stop!");
+		currentAxis->goToDir(REV, currentAxis->getStartSoftStop());
+	}
+
+	//Go to end soft stop
+	else if (token == "goendsoftstop") {
+		debug("Go End Soft Stop!");
+		currentAxis->goToDir(FWD, currentAxis->getEndSoftStop());
+	}
+
+	//Delete  start soft stop
+	else if (token == "deletestartsoftstop") {
+		debug("Delete Start Soft Stop!");
+		currentAxis->setStartSoftStop(0L);
+	}
+
+	//Delete end soft stop
+	else if (token == "deleteendsoftstop") {
+		debug("Delete End Soft Stop!");
+		currentAxis->setEndSoftStop(0L);
+	}
+
 
 	//Set Keyframe command
 	else if (token == "setkeyframe") {

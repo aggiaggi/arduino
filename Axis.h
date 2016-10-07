@@ -33,11 +33,12 @@ class Axis:public AutoDriver {
 
     byte getDirection(Keyframe* kf1, Keyframe* kf2);
     byte getDirection();
-    void markStart();
-    long getStart();
-    void markEnd();
-    long getEnd();
-    
+    void markStartSoftStop();
+    long getStartSoftStop();
+    void markEndSoftStop();
+    long getEndSoftStop();
+	void setStartSoftStop(long pos);
+	void setEndSoftStop(long pos);
     void stop();
 
   private:
@@ -47,9 +48,10 @@ class Axis:public AutoDriver {
     int currentKeyframeIndex  = 0;         //sequence number of current keyframe
     Keyframe* currentKeyframe = &keyframes[0];  //pointer to current keyframe
     MotionState motionState = STOPPED;     //states of the motion program
-    long startPosition = -2000000;                //start position
-    long endPosition = 2000000;                  //end position
-    
+    long startSoftStop = -0xFFFFFFFFL;                //start position
+    long endSoftStop = 0xFFFFFFFL;                  //end position
+	bool stopsEnabled = false;
+
     void debug(String message) {Serial.println(message);
       }
     float maxSpeed = 600;
