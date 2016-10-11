@@ -48,8 +48,8 @@ class Axis:public AutoDriver {
     int currentKeyframeIndex  = 0;         //sequence number of current keyframe
     Keyframe* currentKeyframe = &keyframes[0];  //pointer to current keyframe
     MotionState motionState = STOPPED;     //states of the motion program
-    long startSoftStop = -0xFFFFFFFFL;                //start position
-    long endSoftStop = 0xFFFFFFFL;                  //end position
+    long startSoftStop = 0L;                //start position
+    long endSoftStop = 0L;                  //end position
 	bool stopsEnabled = false;
 
     void debug(String message) {Serial.println(message);

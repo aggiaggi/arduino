@@ -1,15 +1,20 @@
 #include <SPI.h>
 #include "Axis.h"
+#include "ArduinoJson.h"
 
-//Buffer REST commands
+//Buffer for commands
 #define COMMANDBUFFERLENGTH 512
 char commandBuffer[COMMANDBUFFERLENGTH];
 //Buffer for REST values
 #define VALUEBUFFERLENGTH 255
 char valueBuffer[VALUEBUFFERLENGTH];
 
-
-//Storing axis information
+//Dynamic JSON Buffer
+DynamicJsonBuffer  jsonBuffer;
+JsonObject& root = jsonBuffer.createObject();
+JsonObject& jsonAxis1 = root.createNestedObject("axis1");
+JsonObject& jsonAxis2 = root.createNestedObject("axis2");
+JsonObject& jsonAxis3 = root.createNestedObject("axis3");
 
 //Autodriver setup
 Axis axis1(0, 2, 4, 3);
@@ -102,9 +107,13 @@ void setup() {
 void loop() {
 
 	//Send JSON data to node server
-	String data =
-		"{\"pos1\":" + String(axis1.getPos()) + ",\"pos2\":" + String("-123") + ",\"pos3\":" + String(-123) + "}";
-	SerialUSB.println(data);
+	
+	jsonAxis1["pos"] = axis1.getPos();
+	jsonAxis1["stop1"] = axis1.getStartSoftStop();
+	jsonAxis1["stop2"] = axis1.getEndSoftStop();
+	jsonAxis2["pos"] = -123;
+	jsonAxis3["pos"] = -123;
+	root.printTo(SerialUSB);
 
 	//Receive commands from node server
 	String commandString = "";
