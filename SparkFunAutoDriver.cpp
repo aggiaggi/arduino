@@ -10,6 +10,8 @@ AutoDriver::AutoDriver(int position, int CSPin, int resetPin, int busyPin)
   _position = position;
   _resetPin = resetPin;
   _busyPin = busyPin;
+  //When not daisy chained _numBoards = 1
+  //_numBoards = 1;
   _numBoards++;
   _SPI = &SPI;
 }
@@ -20,6 +22,8 @@ AutoDriver::AutoDriver(int position, int CSPin, int resetPin)
   _position = position;
   _resetPin = resetPin;
   _busyPin = -1;
+  //When not daisy chained _numBoards = 1
+  //_numBoards = 1;
   _numBoards++;
   _SPI = &SPI;
 }

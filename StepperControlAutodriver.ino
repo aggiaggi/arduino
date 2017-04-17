@@ -17,9 +17,10 @@ JsonObject& jsonAxis2 = root.createNestedObject("axis2");
 JsonObject& jsonAxis3 = root.createNestedObject("axis3");
 
 //Autodriver setup
-Axis axis1(0, 2, 4, 3);
-//Axis axis2(0, 6, 8, 7);
-//Axis axis3(0, 10, 12, 11);
+//position, cs, reset, busy
+Axis axis1(0, 3, 2, 4); //3. motor
+Axis axis2(1, 3, 2, 4); //2. motor
+Axis axis3(2, 3, 2, 4); //Tian shield motor
 
 Axis* currentAxis = &axis1;
 
@@ -30,73 +31,66 @@ void setup() {
 	//Setup I/O pins
 	pinMode(MOSI, OUTPUT);
 	pinMode(MISO, INPUT);
-	pinMode(2, OUTPUT);
-	pinMode(4, OUTPUT);
-	pinMode(3, INPUT);
-
-	//Set CS High
-	digitalWrite(2, HIGH);
-
-	//Reset
-	digitalWrite(4, LOW);
-	digitalWrite(4, HIGH);
-
 	SPI.begin();
 	SPI.setDataMode(SPI_MODE3);
 
-	void SPIPortConnect(SPIClass *SPIPort);
+	//Setup Driver Interface
+	pinMode(2, OUTPUT); //Reset
+	pinMode(3, OUTPUT); //CS
+	pinMode(4, INPUT); //Busy
 
+	//Set CS High
+	digitalWrite(3, HIGH);
 
-	axis1.SPIPortConnect(&SPI);
+	//Reset all axes
+	digitalWrite(2, LOW);
+	digitalWrite(2, HIGH);
 
-	//Trinamic
-	/*axis1.setAccKVAL(106);
-	axis1.setDecKVAL(106);
-	axis1.setRunKVAL(106);
-	axis1.setHoldKVAL(106);
-	axis1.setParam(INT_SPD, 6675);
-	axis1.setParam(ST_SLP, 68);
-	axis1.setParam(FN_SLP_ACC, 137);
-	axis1.setParam(FN_SLP_DEC, 137);*/
-
-	//Motech 24V
-	/*axis1.setAccKVAL(10);
-	axis1.setDecKVAL(10);
-	axis1.setRunKVAL(10);
-	axis1.setHoldKVAL(10);
-	axis1.setParam(INT_SPD, 4806);
-	axis1.setParam(ST_SLP, 59);
-	axis1.setParam(FN_SLP_ACC, 95);
-	axis1.setParam(FN_SLP_DEC, 95);
-	*/
-	//SanyoDenki 24V
-   /*axis1.setAccKVAL(10);
-   axis1.setDecKVAL(10);
-   axis1.setRunKVAL(10);
-   axis1.setHoldKVAL(0);//17
-   axis1.setParam(INT_SPD, 0);
-   axis1.setParam(ST_SLP, 52);
-   axis1.setParam(FN_SLP_ACC, 85);
-   axis1.setParam(FN_SLP_DEC, 85);
-   */
-
+	//Setup Axis 1
 	axis1.setAxisNumber(1);
 	axis1.configStepMode(STEP_FS_64); //Step mode 1/64
 
-	//Wantai 28BYGH105 17V
-	axis1.setAccKVAL(20); //40
+	//Wantai 28BYGH105 24V
+	axis1.setAccKVAL(20); //28
 	axis1.setDecKVAL(20);
 	axis1.setRunKVAL(20);
-	axis1.setHoldKVAL(0);
+	axis1.setHoldKVAL(20);
 	axis1.setParam(INT_SPD, 37382);
-	axis1.setParam(ST_SLP, 37);
-	axis1.setParam(FN_SLP_ACC, 42);
-	axis1.setParam(FN_SLP_DEC, 42);
+	axis1.setParam(ST_SLP, 27);
+	axis1.setParam(FN_SLP_ACC, 30);
+	axis1.setParam(FN_SLP_DEC, 30);
 
-	// axis2.setAxisNumber(2);
-	 //axis2.configStepMode(STEP_FS_64); //Step mode 1/64
+	
+	//Setup Axis 2
+	axis2.setAxisNumber(2);
+	axis2.configStepMode(STEP_FS_64); //Step mode 1/64
 
-	 // Set up serial port between MCU and Linux
+	//Wantai 28BYGH105 24V
+	axis2.setAccKVAL(20); //40
+	axis2.setDecKVAL(20);
+	axis2.setRunKVAL(20);
+	axis2.setHoldKVAL(20);
+	axis2.setParam(INT_SPD, 37382);
+	axis2.setParam(ST_SLP, 27);
+	axis2.setParam(FN_SLP_ACC, 30);
+	axis2.setParam(FN_SLP_DEC, 30);
+
+	//Setup Axis 3
+	axis3.setAxisNumber(3);
+	axis3.configStepMode(STEP_FS_64); //Step mode 1/64
+
+	//Motech 24V
+	axis3.setAccKVAL(10); //40
+	axis3.setDecKVAL(10);
+	axis3.setRunKVAL(5);
+	axis3.setHoldKVAL(0);
+	axis3.setParam(INT_SPD, 4806);
+	axis3.setParam(ST_SLP, 59);
+	axis3.setParam(FN_SLP_ACC, 95);
+	axis3.setParam(FN_SLP_DEC, 95);
+	
+
+	 // Set up serial port between MCU and MIPS
 	SerialUSB.begin(400000);
 	//Set up serial console port for debugging
 	Serial.begin(115200);
@@ -107,12 +101,21 @@ void setup() {
 void loop() {
 
 	//Send JSON data to node server
-	
+	//debug(String(axis1.getPos()));
+	//debug(String(axis2.getPos()));
+
 	jsonAxis1["pos"] = axis1.getPos();
 	jsonAxis1["stop1"] = axis1.getStartSoftStop();
 	jsonAxis1["stop2"] = axis1.getEndSoftStop();
-	jsonAxis2["pos"] = -123;
-	jsonAxis3["pos"] = -123;
+	
+	jsonAxis2["pos"] = axis2.getPos();
+	jsonAxis2["stop1"] = axis2.getStartSoftStop();
+	jsonAxis2["stop2"] = axis2.getEndSoftStop();
+
+	jsonAxis3["pos"] = axis3.getPos();
+	jsonAxis3["stop1"] = axis3.getStartSoftStop();
+	jsonAxis3["stop2"] = axis3.getEndSoftStop();
+
 	root.printTo(SerialUSB);
 
 	//Receive commands from node server
@@ -193,14 +196,21 @@ void process(String commandString) {
 		axis1.hardHiZ();
 		axis1.stopKeyframeSequence();
 
-		//axis2.hardHiZ();
-		//axis2.stopKeyframeSequence();
+		axis2.hardHiZ();
+		axis2.stopKeyframeSequence();
+
+		axis3.hardHiZ();
+		axis3.stopKeyframeSequence();
 
 		return;
 	}
 
 	else if (token == "1")
 		currentAxis = &axis1;
+	else if (token == "2")
+		currentAxis = &axis2;
+	else if (token == "3")
+		currentAxis = &axis3;
 	else
 		return;
 

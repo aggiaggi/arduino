@@ -54,7 +54,7 @@ class Axis:public AutoDriver {
 
     void debug(String message) {Serial.println(message);
       }
-    float maxSpeed = 600;
+    float maxSpeed = 1500;
 };
 
 //Status register
