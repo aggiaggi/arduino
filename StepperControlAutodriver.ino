@@ -22,6 +22,8 @@ Axis axis1(0, 3, 2, 4); //3. motor
 Axis axis2(1, 3, 2, 4); //2. motor
 Axis axis3(2, 3, 2, 4); //Tian shield motor
 
+Axis* axes[] = { &axis1, &axis2, &axis3 };
+
 Axis* currentAxis = &axis1;
 
 int counter = 0;
@@ -44,50 +46,65 @@ void setup() {
 
 	//Reset all axes
 	digitalWrite(2, LOW);
+	delay(200);
 	digitalWrite(2, HIGH);
+	/*axis1.resetDev();
+	axis2.resetDev();
+	axis3.resetDev();*/
 
 	//Setup Axis 1
 	axis1.setAxisNumber(1);
-	axis1.configStepMode(STEP_FS_64); //Step mode 1/64
+	axis1.configStepMode(STEP_FS_128); //Step mode 1/128
 
 	//Wantai 28BYGH105 24V
 	axis1.setAccKVAL(20); //28
 	axis1.setDecKVAL(20);
 	axis1.setRunKVAL(20);
-	axis1.setHoldKVAL(20);
+	axis1.setHoldKVAL(0);
 	axis1.setParam(INT_SPD, 37382);
-	axis1.setParam(ST_SLP, 27);
-	axis1.setParam(FN_SLP_ACC, 30);
-	axis1.setParam(FN_SLP_DEC, 30);
+	axis1.setParam(ST_SLP, 5);
+	axis1.setParam(FN_SLP_ACC, 8);
+	axis1.setParam(FN_SLP_DEC, 8);
 
-	
+	axis1.Axis::setMaxSpeed(1000.0);
+	axis1.Axis::setAcc(1000);
+	axis1.Axis::setDec(1000);
+
 	//Setup Axis 2
 	axis2.setAxisNumber(2);
-	axis2.configStepMode(STEP_FS_64); //Step mode 1/64
+	axis2.configStepMode(STEP_FS_128); //Step mode 1/128
 
 	//Wantai 28BYGH105 24V
-	axis2.setAccKVAL(20); //40
-	axis2.setDecKVAL(20);
-	axis2.setRunKVAL(20);
-	axis2.setHoldKVAL(20);
+	axis2.setAccKVAL(28); //28
+	axis2.setDecKVAL(28);
+	axis2.setRunKVAL(28);
+	axis2.setHoldKVAL(0);
 	axis2.setParam(INT_SPD, 37382);
-	axis2.setParam(ST_SLP, 27);
-	axis2.setParam(FN_SLP_ACC, 30);
-	axis2.setParam(FN_SLP_DEC, 30);
+	axis2.setParam(ST_SLP, 5);
+	axis2.setParam(FN_SLP_ACC, 8);
+	axis2.setParam(FN_SLP_DEC, 8);
+
+	axis2.Axis::setMaxSpeed(1000.0);
+	axis2.Axis::setAcc(1000);
+	axis2.Axis::setDec(1000);
 
 	//Setup Axis 3
 	axis3.setAxisNumber(3);
-	axis3.configStepMode(STEP_FS_64); //Step mode 1/64
+	axis3.configStepMode(STEP_FS_128); //Step mode 1/128
 
 	//Motech 24V
-	axis3.setAccKVAL(10); //40
-	axis3.setDecKVAL(10);
-	axis3.setRunKVAL(5);
+	axis3.setAccKVAL(40); //40
+	axis3.setDecKVAL(40);
+	axis3.setRunKVAL(30);
 	axis3.setHoldKVAL(0);
 	axis3.setParam(INT_SPD, 4806);
-	axis3.setParam(ST_SLP, 59);
-	axis3.setParam(FN_SLP_ACC, 95);
-	axis3.setParam(FN_SLP_DEC, 95);
+	axis3.setParam(ST_SLP, 48);
+	axis3.setParam(FN_SLP_ACC, 84);
+	axis3.setParam(FN_SLP_DEC, 84);
+
+	axis3.Axis::setMaxSpeed(550.0);
+	axis3.Axis::setAcc(550);
+	axis3.Axis::setDec(550);
 	
 
 	 // Set up serial port between MCU and MIPS
@@ -95,7 +112,51 @@ void setup() {
 	//Set up serial console port for debugging
 	Serial.begin(115200);
 
+	//set up keyframes
+	for (int i=0;i<3;i++)
+		debug("Axis number: " + String(axes[i]->getAxisNumber()));
+
+	//Axis 1
+	axis1.getKeyframe(1)->setPosition(-500);
+	axis1.getKeyframe(1)->setSpeed(70);
+	axis1.getKeyframe(1)->setAcc(200);
+	axis1.getKeyframe(1)->setDec(200);
+
+	axis1.getKeyframe(2)->setPosition(500);
+	axis1.getKeyframe(2)->setSpeed(70);
+	axis1.getKeyframe(2)->setAcc(200);
+	axis1.getKeyframe(2)->setDec(200);
+
+	axis1.setNumberOfKeyframes(2);
+
+	//Axis 2
+	axis2.getKeyframe(1)->setPosition(1300);
+	axis2.getKeyframe(1)->setSpeed(200);
+	axis2.getKeyframe(1)->setAcc(200);
+	axis2.getKeyframe(1)->setDec(200);
+
+	axis2.getKeyframe(2)->setPosition(-1300);
+	axis2.getKeyframe(2)->setSpeed(200);
+	axis2.getKeyframe(2)->setAcc(200);
+	axis2.getKeyframe(2)->setDec(200);
+
+	axis2.setNumberOfKeyframes(2);
+
+	//Axis 3
+	axis3.getKeyframe(1)->setPosition(-3500);
+	axis3.getKeyframe(1)->setSpeed(550);
+	axis3.getKeyframe(1)->setAcc(200);
+	axis3.getKeyframe(1)->setDec(200);
+
+	axis3.getKeyframe(2)->setPosition(3500);
+	axis3.getKeyframe(2)->setSpeed(550);
+	axis3.getKeyframe(2)->setAcc(200);
+	axis3.getKeyframe(2)->setDec(200);
+
+	axis3.setNumberOfKeyframes(2);
+
 	debug("Axes initialisation finished ...");
+	
 }
 
 void loop() {
@@ -104,15 +165,15 @@ void loop() {
 	//debug(String(axis1.getPos()));
 	//debug(String(axis2.getPos()));
 
-	jsonAxis1["pos"] = axis1.getPos();
+	jsonAxis1["pos"] = axis1.getPosition();
 	jsonAxis1["stop1"] = axis1.getStartSoftStop();
 	jsonAxis1["stop2"] = axis1.getEndSoftStop();
 	
-	jsonAxis2["pos"] = axis2.getPos();
+	jsonAxis2["pos"] = axis2.getPosition();
 	jsonAxis2["stop1"] = axis2.getStartSoftStop();
 	jsonAxis2["stop2"] = axis2.getEndSoftStop();
 
-	jsonAxis3["pos"] = axis3.getPos();
+	jsonAxis3["pos"] = axis3.getPosition();
 	jsonAxis3["stop1"] = axis3.getStartSoftStop();
 	jsonAxis3["stop2"] = axis3.getEndSoftStop();
 
@@ -132,10 +193,15 @@ void loop() {
 	}
 
 	//Update axes
-	
-	/*if (axis1.getMotionState() != Axis::STOPPED )
+	if (axis1.getMotionState() != Axis::STOPPED )
 	  axis1.controlKeyframeSequence();
-	else if ((axis1.getMotionState() != Axis::MANUAL) && (axis1.getStopsEnabled())) {
+	if (axis2.getMotionState() != Axis::STOPPED)
+		axis2.controlKeyframeSequence();
+	if (axis3.getMotionState() != Axis::STOPPED)
+		axis3.controlKeyframeSequence();
+
+
+	/*else if ((axis1.getMotionState() != Axis::MANUAL) && (axis1.getStopsEnabled())) {
 	  byte dir = axis1.getDirection();
 	  long pos = axis1.getPos();
 	  if ((dir == FWD && pos >= axis1.getEndSoftStop()) || (dir == REV && pos <= axis1.getStartSoftStop()) )
@@ -150,7 +216,7 @@ void loop() {
 	
 
 	// Poll every 100ms
-	delay(300);
+	delay(100);
 
 	//Output position info
 	//if (++counter >= 10 && (axis1.getMotionState() == Axis::MANUAL || axis2.getMotionState() == Axis::MANUAL)) {
@@ -164,8 +230,7 @@ void loop() {
 //
 /// --------------------------
 void process(String commandString) {
-	debug(F("Process ..."));
-	debug(commandString);
+	debug("From Server: " + commandString);
 
 	// Get rid of whitespace
 	commandString.trim();
@@ -177,16 +242,11 @@ void process(String commandString) {
 	//switch(tokrn)
 	if (token == "start") {
 		debug("Start!");
-		int result = initializeKeyframeSequence(&axis1);
-		//result += initializeKeyframeSequence(&axis2);
-		if (result == 0) {
-			axis1.startKeyframeSequence();
-			//axis2.startKeyframeSequence();
-		}
-		else
-			debug(F("Problems starting motion program!"));
-
-		return;
+		
+		axis1.startKeyframeSequence();
+		axis2.startKeyframeSequence();
+		axis3.startKeyframeSequence();
+		
 	}
 
 	// is "stop" command?

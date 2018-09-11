@@ -9,6 +9,21 @@ Keyframe::Keyframe(long position, float speed) {
   this->speed = speed;
 }
 
+Keyframe::Keyframe(unsigned long frame, long position, float acc, float dec) {
+	this->frame = frame;
+	this->position = position;
+	this->acc = acc;
+	this->dec = dec;
+}
+
+void Keyframe::setFrame(unsigned long frame) {
+	this->frame = frame;
+}
+
+unsigned long Keyframe::getFrame() {
+	return this->frame;
+}
+
 void Keyframe::setPosition(long position) {
   this->position = position;
 }
@@ -41,19 +56,19 @@ float Keyframe::getDec() {
   return this->dec;
 }
 
-void Keyframe::setNextKeyframe(Keyframe* kf) {
-  nextKeyframe = kf;
-}
-
-Keyframe* Keyframe::getNextKeyframe() {
-  return nextKeyframe;
-}
-
-void Keyframe::setPreviousKeyframe(Keyframe* kf) {
-  previousKeyframe = kf;  
-}
-
-Keyframe* Keyframe::getPreviousKeyframe() {
-  return previousKeyframe;
-}
+//void Keyframe::setNextKeyframe(Keyframe* kf) {
+//  nextKeyframe = kf;
+//}
+//
+//Keyframe* Keyframe::getNextKeyframe() {
+//  return nextKeyframe;
+//}
+//
+//void Keyframe::setPreviousKeyframe(Keyframe* kf) {
+//  previousKeyframe = kf;  
+//}
+//
+//Keyframe* Keyframe::getPreviousKeyframe() {
+//  return previousKeyframe;
+//}
 

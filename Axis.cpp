@@ -4,9 +4,16 @@ Axis::Axis(int position, int CSPin, int resetPin) : AutoDriver(position,CSPin,re
 
 Axis::Axis(int position, int CSPin, int resetPin, int busyPin) : AutoDriver(position,CSPin,resetPin,busyPin) {};
 
+void Axis::addKeyframe(Keyframe kf) {
+
+}
+
 int Axis::startKeyframeSequence() {
   debug("Starting up keyframe sequence");
   //if (++currentKeyframeIndex <= numberOfKeyframes) {
+
+  debug("Buffers: maxspeed " + String(this->maxSpeedBuffer) + " / acc " + String(this->accBuffer) + " / dec " + String(this->decBuffer));
+  
   currentKeyframeIndex = 0;
   
   //Update motion state
@@ -24,8 +31,7 @@ void Axis::nextKeyframe() {
   currentKeyframe = getKeyframe(currentKeyframeIndex);
   
   //Get current stepper position
-  byte stepMode = this->getStepMode();
-  long currentPos = this->getPos()>>(stepMode%8);
+  long currentPos = this->getPosition();
 
   //Get new position & speed
   long newPos = currentKeyframe->getPosition();
@@ -39,34 +45,36 @@ void Axis::nextKeyframe() {
     dir = REV;
 
   //Setup acceleration and deceleration
-  this->setAcc(newAcc);
-  this->setDec(newDec);
+  this->AutoDriver::setAcc(newAcc);
+  this->AutoDriver::setDec(newDec);
         
   //Start motion
   if (currentKeyframeIndex < numberOfKeyframes) {
     debug("Next Keyframe!");
     Keyframe* nextKeyframe = getKeyframe(currentKeyframeIndex+1);
-    if (dir == getDirection(currentKeyframe, nextKeyframe)) {
-      
-      //If not last keyframe AND keyframe after next keyframe requires same direction of movement 
-      //-> run command required
-      this->run(dir, newSpeed);
-      
-      debug("Run " + String(newPos));
-    }
-    else {
+    //if (dir == getDirection(currentKeyframe, nextKeyframe)) {
+    //  
+    //  //If not last keyframe AND keyframe after next keyframe requires same direction of movement 
+    //  //-> run command required
+    //  this->run(dir, newSpeed);
+    //  
+    //  debug("Run " + String(newPos));
+    //}
+    //else {
       //Keyframe after  next keyframe requires switching of direction
       //-> goto command required to stop at exact position
-      this->setMaxSpeed(newSpeed);
+      this->AutoDriver::setMaxSpeed(newSpeed);
+	  byte stepMode = this->getStepMode();
       this->goTo(((unsigned long)newPos)<<(stepMode%8));
       
       debug("Goto " + String(newPos));
-    }
+    //}
   }
   else {
     //If last keyframe: goto command required to reach exact stop position
     
-    this->setMaxSpeed(newSpeed);
+    this->AutoDriver::setMaxSpeed(newSpeed);
+	byte stepMode = this->getStepMode();
     this->goTo(((unsigned long)newPos)<<(stepMode%8));
     debug("Last Keyframe!");
     debug("Goto " + String(newPos) + " @" + String(newSpeed));
@@ -81,9 +89,11 @@ void Axis::nextKeyframe() {
 }
 
 void Axis::stopKeyframeSequence() {
-  //Immediatly stop stepper
-  //this->hardHiZ();
-  this->setMaxSpeed(maxSpeed);
+  
+  // Restore original values
+  this->setMaxSpeed(this->maxSpeedBuffer);
+  this->setAcc(this->accBuffer);
+  this->setDec(this->decBuffer);
   
   //Reset keyframe index
   currentKeyframeIndex = 0;
@@ -99,11 +109,11 @@ void Axis::controlKeyframeSequence() {
   
   //Get current stepper position
   byte stepMode = this->getStepMode();
-  long currentPos = this->getPos()>>(stepMode%8);
+  long currentPos = this->getPos();
   
-  //Get target keyframe position
-  long targetPos = currentKeyframe->getPosition();
-
+  //Get target keyframe position in microsteps
+  long targetPos = (currentKeyframe->getPosition()) << (stepMode % 8);
+ 
   //Get status register
   int currentStatus = this->getStatus();
 
@@ -112,7 +122,11 @@ void Axis::controlKeyframeSequence() {
 
   //Check if target position has been reached or surpassed, depending on stepper direction
   //dir = FWD -> position increases
-  if (!this->busyCheck() && (((currentPos >= targetPos) && stepperDir) || ((currentPos <= targetPos) && !stepperDir))) {
+  //if (!this->busyCheck() && (((currentPos >= targetPos) && stepperDir) || ((currentPos <= targetPos) && !stepperDir))) {
+  if (
+	  ((currentPos >= targetPos) && stepperDir) || ((currentPos <= targetPos) && !stepperDir)
+	  ) {
+
 
     if (motionState != LASTKEYFRAME) {
       //select next keyframe in sequence
@@ -137,8 +151,8 @@ byte Axis::getDirection(Keyframe* kf1, Keyframe* kf2) {
 }
 
 void Axis::markStartSoftStop() {
-  this->startSoftStop = this->getPos();
-  debug(String(this->getPos()));
+  this->startSoftStop = this->getPosition();
+  debug(String(this->startSoftStop));
 }
 
 void Axis::setStartSoftStop(long pos) {
@@ -151,8 +165,8 @@ long Axis::getStartSoftStop() {
 }
 
 void Axis::markEndSoftStop() {
-   this->endSoftStop = this->getPos();
-   debug(String(this->getPos()));
+   this->endSoftStop = this->getPosition();
+   debug(String(this->endSoftStop));
 }
 
 void Axis::setEndSoftStop(long pos) {
@@ -180,3 +194,24 @@ void Axis::stop() {
 	return this->stopsEnabled;
 }
 */
+
+long Axis::getPosition() {
+	byte stepMode = this->getStepMode();
+	long position = this->AutoDriver::getPos() >> (stepMode % 8);
+	return  position;
+}
+
+void Axis::setMaxSpeed(float speed) {
+	this->maxSpeedBuffer = speed;
+	this->AutoDriver::setMaxSpeed(speed);
+}
+
+void Axis::setAcc(float acc) {
+	this->accBuffer = acc;
+	this->AutoDriver::setAcc(acc);
+}
+
+void Axis::setDec(float dec) {
+	this->decBuffer = dec;
+	this->AutoDriver::setDec(dec);
+}
