@@ -21,12 +21,15 @@ public:
 
 	void setNumberOfKeyframes(int number) { this->numberOfKeyframes = number; }
 	int getNumberOfKeyframes() { return this->numberOfKeyframes; }
-	void addKeyframe(Keyframe kf);
+	int addKeyframe(Keyframe kf);
+	void printKeyframes();
 
 	MotionState getMotionState() { return motionState; }
 
 	Keyframe* getKeyframe(int index) { return &keyframes[index - 1]; }       //get keyframe at index
 
+	int initKeyframeSequence(int framerate);
+	float calculateSpeed(float T, float acc, float dec, long x);
 	void nextKeyframe();              //switches to next keyframe
 	int startKeyframeSequence();     //starts motion programme consisting of keyframe sequence
 	void stopKeyframeSequence();      //stops and resets motion programme
@@ -41,10 +44,13 @@ public:
 	void setStartSoftStop(long pos);
 	void setEndSoftStop(long pos);
 	void stop();
-	long getPosition();
+	long getFullPosition();
+	long getMicroStepPosition(long position);
 	void setMaxSpeed(float speed);	//Overloading AutoDriver method
 	void setAcc(float acc);			//Overloading AutoDriver method
 	void setDec(float dec);			//Overloading AutoDriver method
+
+	
 
 private:
 	int axisNumber;                        //axis number
@@ -69,7 +75,7 @@ private:
 //#define STATUS_BUSY   0x02
 //#define STATUS_SW_F   0x04
 //#define STATUS_SW_EVN 0x08
-#define STATUS_DIR    0x10
+//#define STATUS_DIR    0x10
 
 //#define STATUS_DIR 0b00010000
 

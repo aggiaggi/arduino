@@ -23,10 +23,6 @@ class Keyframe
     float getAcc();
     void setDec(float dec);
     float getDec();
-   // void setNextKeyframe(Keyframe* kf);
-   // Keyframe* getNextKeyframe();
-   // void setPreviousKeyframe(Keyframe* kf);
-    //Keyframe* getPreviousKeyframe();
 };
 
 

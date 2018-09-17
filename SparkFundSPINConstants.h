@@ -205,7 +205,6 @@
 #define HARD_STOP            0xB8
 #define SOFT_HIZ             0xA0
 #define HARD_HIZ             0xA8
-#define GET_STATUS           0xD0
+#define GET_SPIN_STATUS           0xD0
 
 #endif
-

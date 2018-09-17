@@ -56,19 +56,4 @@ float Keyframe::getDec() {
   return this->dec;
 }
 
-//void Keyframe::setNextKeyframe(Keyframe* kf) {
-//  nextKeyframe = kf;
-//}
-//
-//Keyframe* Keyframe::getNextKeyframe() {
-//  return nextKeyframe;
-//}
-//
-//void Keyframe::setPreviousKeyframe(Keyframe* kf) {
-//  previousKeyframe = kf;  
-//}
-//
-//Keyframe* Keyframe::getPreviousKeyframe() {
-//  return previousKeyframe;
-//}
 

@@ -29,7 +29,7 @@ Axis* currentAxis = &axis1;
 int counter = 0;
 
 void setup() {
-
+	
 	//Setup I/O pins
 	pinMode(MOSI, OUTPUT);
 	pinMode(MISO, INPUT);
@@ -111,49 +111,42 @@ void setup() {
 	SerialUSB.begin(400000);
 	//Set up serial console port for debugging
 	Serial.begin(115200);
-
+	
 	//set up keyframes
 	for (int i=0;i<3;i++)
 		debug("Axis number: " + String(axes[i]->getAxisNumber()));
-
+	
 	//Axis 1
-	axis1.getKeyframe(1)->setPosition(-500);
-	axis1.getKeyframe(1)->setSpeed(70);
-	axis1.getKeyframe(1)->setAcc(200);
-	axis1.getKeyframe(1)->setDec(200);
+	Keyframe kf11 = Keyframe(0, -100, 100.0, 100.0);
+	Keyframe kf12 = Keyframe(500, 100, 100.0, 100.0);
 
-	axis1.getKeyframe(2)->setPosition(500);
-	axis1.getKeyframe(2)->setSpeed(70);
-	axis1.getKeyframe(2)->setAcc(200);
-	axis1.getKeyframe(2)->setDec(200);
-
-	axis1.setNumberOfKeyframes(2);
-
+	debug("Setting keyframes for Axis 1");
+	debug(String(axis1.addKeyframe(kf11)));
+	debug(String(axis1.addKeyframe(kf12)));
+	
 	//Axis 2
-	axis2.getKeyframe(1)->setPosition(1300);
-	axis2.getKeyframe(1)->setSpeed(200);
-	axis2.getKeyframe(1)->setAcc(200);
-	axis2.getKeyframe(1)->setDec(200);
+	Keyframe kf21 = Keyframe(0, 1000, 100.0, 100.0);
+	Keyframe kf22 = Keyframe(500, -1000, 100.0, 100.0);
 
-	axis2.getKeyframe(2)->setPosition(-1300);
-	axis2.getKeyframe(2)->setSpeed(200);
-	axis2.getKeyframe(2)->setAcc(200);
-	axis2.getKeyframe(2)->setDec(200);
+	debug("Setting keyframes for Axis 2");
+	debug(String(axis2.addKeyframe(kf21)));
+	debug(String(axis2.addKeyframe(kf22)));
 
-	axis2.setNumberOfKeyframes(2);
 
 	//Axis 3
-	axis3.getKeyframe(1)->setPosition(-3500);
-	axis3.getKeyframe(1)->setSpeed(550);
-	axis3.getKeyframe(1)->setAcc(200);
-	axis3.getKeyframe(1)->setDec(200);
+	Keyframe kf31 = Keyframe(0, -4000, 100.0, 100.0);
+	Keyframe kf32 = Keyframe(500, 4000, 100.0, 100.0);
 
-	axis3.getKeyframe(2)->setPosition(3500);
-	axis3.getKeyframe(2)->setSpeed(550);
-	axis3.getKeyframe(2)->setAcc(200);
-	axis3.getKeyframe(2)->setDec(200);
+	debug("Setting keyframes for Axis 3");
+	debug(String(axis3.addKeyframe(kf31)));
+	debug(String(axis3.addKeyframe(kf32)));
 
-	axis3.setNumberOfKeyframes(2);
+	axis1.initKeyframeSequence(24);
+	axis2.initKeyframeSequence(24);
+	axis3.initKeyframeSequence(24);
+	axis1.printKeyframes();
+	axis2.printKeyframes();
+	axis3.printKeyframes();
 
 	debug("Axes initialisation finished ...");
 	
@@ -165,15 +158,15 @@ void loop() {
 	//debug(String(axis1.getPos()));
 	//debug(String(axis2.getPos()));
 
-	jsonAxis1["pos"] = axis1.getPosition();
+	jsonAxis1["pos"] = axis1.getFullPosition();
 	jsonAxis1["stop1"] = axis1.getStartSoftStop();
 	jsonAxis1["stop2"] = axis1.getEndSoftStop();
 	
-	jsonAxis2["pos"] = axis2.getPosition();
+	jsonAxis2["pos"] = axis2.getFullPosition();
 	jsonAxis2["stop1"] = axis2.getStartSoftStop();
 	jsonAxis2["stop2"] = axis2.getEndSoftStop();
 
-	jsonAxis3["pos"] = axis3.getPosition();
+	jsonAxis3["pos"] = axis3.getFullPosition();
 	jsonAxis3["stop1"] = axis3.getStartSoftStop();
 	jsonAxis3["stop2"] = axis3.getEndSoftStop();
 
@@ -243,6 +236,13 @@ void process(String commandString) {
 	if (token == "start") {
 		debug("Start!");
 		
+	
+		// Go to initial position
+		axis1.goTo(axis1.getMicroStepPosition(axis1.getKeyframe(1)->getPosition()));
+		axis2.goTo(axis2.getMicroStepPosition(axis2.getKeyframe(1)->getPosition()));
+		axis3.goTo(axis3.getMicroStepPosition(axis3.getKeyframe(1)->getPosition()));
+
+		delay(10000);
 		axis1.startKeyframeSequence();
 		axis2.startKeyframeSequence();
 		axis3.startKeyframeSequence();
