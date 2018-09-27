@@ -7,6 +7,25 @@
 //Maximum number of keyframes
 #define MAXKEYFRAMES 6
 
+struct MotorConfig {
+	float voltage;		// rated voltage [V]
+	float current;		// rated current [A]
+	float resistance;	// phase resistance [Ohm]
+	float inductance;	// phase inductance in [mH]
+	float torque;		// torque [Ncm]
+};
+
+struct AxisConfig {
+	float maxAccel;		// maximum acceleration [steps/s/s]
+	float maxDecel;		// maximum deceleration [steps/s/s]
+	long maxSpeed;		// maximum speed [steps/s]
+	byte accPower;		// acceleration power ratio [%]
+	byte decPower;		// deceleration power raqtio [%]
+	byte runPower;		// running power ratio [%]
+	byte holdPower;		// holding power ratio [%]
+	MotorConfig motorConfig;	// axis motor configuration
+};
+
 class Axis :public AutoDriver {
 	// Program state 
 public:
@@ -15,6 +34,8 @@ public:
 
 	Axis(int position, int CSPin, int resetPin);
 	Axis(int position, int CSPin, int resetPin, int busyPin);
+
+	int init(AxisConfig*);
 
 	void setAxisNumber(int number) { this->axisNumber = number; }
 	int getAxisNumber() { return this->axisNumber; }
@@ -46,28 +67,24 @@ public:
 	void stop();
 	long getFullPosition();
 	long getMicroStepPosition(long position);
-	void setMaxSpeed(float speed);	//Overloading AutoDriver method
-	void setAcc(float acc);			//Overloading AutoDriver method
-	void setDec(float dec);			//Overloading AutoDriver method
-
 	
 
 private:
 	int axisNumber;                        //axis number
+	float busVoltage = 24.0;				// bus voltage
+	AxisConfig* axisConfig;					// stores axis configuration information
 	Keyframe keyframes[MAXKEYFRAMES];     //keyframe sequence
 	int numberOfKeyframes = 0;             //number of keyframes in keyframe sequence
 	int currentKeyframeIndex = 0;         //sequence number of current keyframe
 	Keyframe* currentKeyframe = &keyframes[0];  //pointer to current keyframe
+	byte currentDir;						// direction from previous to current keyframe position
+	long switchingPosition;					// position at which to switch keyframes
 	MotionState motionState = STOPPED;     //states of the motion program
 	long startSoftStop = 0L;                //start position
 	long endSoftStop = 0L;                  //end position
 	bool stopsEnabled = false;
 
 	void debug(String message) { Serial.println(message); }
-
-	float maxSpeedBuffer = 0;
-	float accBuffer = 0;
-	float decBuffer = 0;
 };
 
 //Status register

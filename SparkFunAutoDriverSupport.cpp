@@ -11,7 +11,7 @@
 // This is a 12-bit value, so we need to make sure the value is at or below 0xFFF.
 unsigned long AutoDriver::accCalc(float stepsPerSecPerSec)
 {
-  float temp = stepsPerSecPerSec * 0.137438;
+  float temp = stepsPerSecPerSec * 0.137438 / 2.0;
   if( (unsigned long) long(temp) > 0x00000FFF) return 0x00000FFF;
   else return (unsigned long) long(temp);
 }
@@ -19,21 +19,21 @@ unsigned long AutoDriver::accCalc(float stepsPerSecPerSec)
 
 float AutoDriver::accParse(unsigned long stepsPerSecPerSec)
 {
-    return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.137438;
+    return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.137438 * 2.0;
 }
 
 // The calculation for DEC is the same as for ACC. Value is 0x08A on boot.
 // This is a 12-bit value, so we need to make sure the value is at or below 0xFFF.
 unsigned long AutoDriver::decCalc(float stepsPerSecPerSec)
 {
-  float temp = stepsPerSecPerSec * 0.137438;
+  float temp = stepsPerSecPerSec * 0.137438 / 2.0;
   if( (unsigned long) long(temp) > 0x00000FFF) return 0x00000FFF;
   else return (unsigned long) long(temp);
 }
 
 float AutoDriver::decParse(unsigned long stepsPerSecPerSec)
 {
-    return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.137438;
+    return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.137438 * 2.0;
 }
 
 // The value in the MAX_SPD register is [(steps/s)*(tick)]/(2^-18) where tick is 

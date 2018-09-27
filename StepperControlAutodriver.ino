@@ -26,6 +26,12 @@ Axis* axes[] = { &axis1, &axis2, &axis3 };
 
 Axis* currentAxis = &axis1;
 
+
+struct MotorConfig wantai;
+struct MotorConfig motech;
+struct AxisConfig panTiltConfig;
+struct AxisConfig sliderConfig;
+
 int counter = 0;
 
 void setup() {
@@ -52,81 +58,75 @@ void setup() {
 	axis2.resetDev();
 	axis3.resetDev();*/
 
+	// Set up serial port between MCU and MIPS
+	SerialUSB.begin(400000);
+	//Set up serial console port for debugging
+	Serial.begin(115200);
+
+	//Wantai 28BYGH105
+	wantai.current = 0.95;
+	wantai.voltage = 2.66;
+	wantai.resistance = 2.8;
+	wantai.inductance = 0.8;
+	wantai.torque = 4.2;
+
+	//Motech
+	motech.current = 2.8;
+	motech.voltage = 3.0;
+	motech.resistance = 1.35;
+	motech.inductance = 3.0;
+	motech.torque = 123.6; 
+
+	// Pan/Tilt axis
+	panTiltConfig.accPower = 1;
+	panTiltConfig.decPower = 1;
+	panTiltConfig.runPower = 1;
+	panTiltConfig.holdPower = 0;
+	panTiltConfig.maxAccel = 700.0;
+	panTiltConfig.maxDecel = 700.0;
+	panTiltConfig.maxSpeed = 1000.0;
+	panTiltConfig.motorConfig = wantai;
+
+	// Slider axis
+	sliderConfig.accPower = 1;
+	sliderConfig.decPower = 1;
+	sliderConfig.runPower = 1;
+	sliderConfig.holdPower = 0;
+	sliderConfig.maxAccel = 700.0;
+	sliderConfig.maxDecel = 700.0;
+	sliderConfig.maxSpeed = 550.0;
+	sliderConfig.motorConfig = motech;
+
 	//Setup Axis 1
 	axis1.setAxisNumber(1);
 	axis1.configStepMode(STEP_FS_128); //Step mode 1/128
-
-	//Wantai 28BYGH105 24V
-	axis1.setAccKVAL(20); //28
-	axis1.setDecKVAL(20);
-	axis1.setRunKVAL(20);
-	axis1.setHoldKVAL(0);
-	axis1.setParam(INT_SPD, 37382);
-	axis1.setParam(ST_SLP, 5);
-	axis1.setParam(FN_SLP_ACC, 8);
-	axis1.setParam(FN_SLP_DEC, 8);
-
-	axis1.Axis::setMaxSpeed(1000.0);
-	axis1.Axis::setAcc(1000);
-	axis1.Axis::setDec(1000);
+	axis1.init(&panTiltConfig);
 
 	//Setup Axis 2
 	axis2.setAxisNumber(2);
 	axis2.configStepMode(STEP_FS_128); //Step mode 1/128
-
-	//Wantai 28BYGH105 24V
-	axis2.setAccKVAL(28); //28
-	axis2.setDecKVAL(28);
-	axis2.setRunKVAL(28);
-	axis2.setHoldKVAL(0);
-	axis2.setParam(INT_SPD, 37382);
-	axis2.setParam(ST_SLP, 5);
-	axis2.setParam(FN_SLP_ACC, 8);
-	axis2.setParam(FN_SLP_DEC, 8);
-
-	axis2.Axis::setMaxSpeed(1000.0);
-	axis2.Axis::setAcc(1000);
-	axis2.Axis::setDec(1000);
+	axis2.init(&panTiltConfig);
 
 	//Setup Axis 3
 	axis3.setAxisNumber(3);
 	axis3.configStepMode(STEP_FS_128); //Step mode 1/128
-
-	//Motech 24V
-	axis3.setAccKVAL(40); //40
-	axis3.setDecKVAL(40);
-	axis3.setRunKVAL(30);
-	axis3.setHoldKVAL(0);
-	axis3.setParam(INT_SPD, 4806);
-	axis3.setParam(ST_SLP, 48);
-	axis3.setParam(FN_SLP_ACC, 84);
-	axis3.setParam(FN_SLP_DEC, 84);
-
-	axis3.Axis::setMaxSpeed(550.0);
-	axis3.Axis::setAcc(550);
-	axis3.Axis::setDec(550);
-	
-
-	 // Set up serial port between MCU and MIPS
-	SerialUSB.begin(400000);
-	//Set up serial console port for debugging
-	Serial.begin(115200);
+	axis3.init(&sliderConfig);
 	
 	//set up keyframes
 	for (int i=0;i<3;i++)
 		debug("Axis number: " + String(axes[i]->getAxisNumber()));
 	
 	//Axis 1
-	Keyframe kf11 = Keyframe(0, -100, 100.0, 100.0);
-	Keyframe kf12 = Keyframe(500, 100, 100.0, 100.0);
+	Keyframe kf11 = Keyframe(0, -4000, 150.0, 150.0);
+	Keyframe kf12 = Keyframe(500, 4000, 150.0, 150.0);
 
 	debug("Setting keyframes for Axis 1");
 	debug(String(axis1.addKeyframe(kf11)));
 	debug(String(axis1.addKeyframe(kf12)));
 	
 	//Axis 2
-	Keyframe kf21 = Keyframe(0, 1000, 100.0, 100.0);
-	Keyframe kf22 = Keyframe(500, -1000, 100.0, 100.0);
+	Keyframe kf21 = Keyframe(0, 2000, 100.0, 100.0);
+	Keyframe kf22 = Keyframe(500, -2000, 100.0, 100.0);
 
 	debug("Setting keyframes for Axis 2");
 	debug(String(axis2.addKeyframe(kf21)));
@@ -134,8 +134,8 @@ void setup() {
 
 
 	//Axis 3
-	Keyframe kf31 = Keyframe(0, -4000, 100.0, 100.0);
-	Keyframe kf32 = Keyframe(500, 4000, 100.0, 100.0);
+	Keyframe kf31 = Keyframe(0, -5000, 300.0, 300.0);
+	Keyframe kf32 = Keyframe(500, 5000, 300.0, 300.0);
 
 	debug("Setting keyframes for Axis 3");
 	debug(String(axis3.addKeyframe(kf31)));
@@ -277,9 +277,14 @@ void process(String commandString) {
 	//Parse next token
 	token = parseCommand(&commandString);
 
+	// power on command
+	if (token == "on") {
+		
+	}
+
 	// is "move" command?
 	// arduino/<axis>/move/<'FWD'|'REV'>/<NUMBER_OF_STEPS>
-	if (token == "move") {
+	else if (token == "move") {
 		byte dir = FWD;
 		unsigned long numberOfSteps = 0;
 
@@ -398,8 +403,8 @@ void process(String commandString) {
 	// is "stop" command?
 	// arduino/<axis>/stop
 	else if (token == "stop") {
-		debug("Stop!");
-		currentAxis->stop();
+		debug("Stop Axis " + currentAxis->getAxisNumber());
+		currentAxis->hardStop();
 		currentAxis->stopKeyframeSequence();
 
 		return;
