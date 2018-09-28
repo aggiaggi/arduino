@@ -54,9 +54,6 @@ void setup() {
 	digitalWrite(2, LOW);
 	delay(200);
 	digitalWrite(2, HIGH);
-	/*axis1.resetDev();
-	axis2.resetDev();
-	axis3.resetDev();*/
 
 	// Set up serial port between MCU and MIPS
 	SerialUSB.begin(400000);
@@ -88,9 +85,9 @@ void setup() {
 	panTiltConfig.motorConfig = wantai;
 
 	// Slider axis
-	sliderConfig.accPower = 1;
-	sliderConfig.decPower = 1;
-	sliderConfig.runPower = 1;
+	sliderConfig.accPower = 0.9;
+	sliderConfig.decPower = 0.9;
+	sliderConfig.runPower = 0.9;
 	sliderConfig.holdPower = 0;
 	sliderConfig.maxAccel = 700.0;
 	sliderConfig.maxDecel = 700.0;
@@ -155,8 +152,6 @@ void setup() {
 void loop() {
 
 	//Send JSON data to node server
-	//debug(String(axis1.getPos()));
-	//debug(String(axis2.getPos()));
 
 	jsonAxis1["pos"] = axis1.getFullPosition();
 	jsonAxis1["stop1"] = axis1.getStartSoftStop();
@@ -192,30 +187,17 @@ void loop() {
 		axis2.controlKeyframeSequence();
 	if (axis3.getMotionState() != Axis::STOPPED)
 		axis3.controlKeyframeSequence();
-
-
-	/*else if ((axis1.getMotionState() != Axis::MANUAL) && (axis1.getStopsEnabled())) {
-	  byte dir = axis1.getDirection();
-	  long pos = axis1.getPos();
-	  if ((dir == FWD && pos >= axis1.getEndSoftStop()) || (dir == REV && pos <= axis1.getStartSoftStop()) )
-	  {
-		axis1.hardStop();
-		debug("Axis Hard Stop!");
-	  }
-	}*/
-
-	//if (axis2.getMotionState() != Axis::STOPPED )
-	//  axis2.controlKeyframeSequence();
 	
+	//Output position info
+	if (++counter >= 100) {
+	 debug(	"Axis1 pos: " + String(axis1.getFullPosition()) + 
+	 		" / Busy: " + String(axis1.busyCheck()));
+	 counter = 0;
+	}
 
 	// Poll every 100ms
-	delay(100);
+	delay(5);
 
-	//Output position info
-	//if (++counter >= 10 && (axis1.getMotionState() == Axis::MANUAL || axis2.getMotionState() == Axis::MANUAL)) {
-	//  debug("Axis1 pos: " + String(axis1.getPos()) + " / Axis2 pos: " + String(axis2.getPos()));
-	//  counter = 0;
-	//}
 }
 
 /// --------------------------
@@ -470,82 +452,6 @@ void process(String commandString) {
 		debug("Go Keyframe!");
 
 	}
-}
-
-///--------------------------------
-// Initialise keyframe sequence from datastore
-//
-// Datastore scheme:
-// axis1.numberofkeyframes
-// axis1.kf1.position
-// axis1.kf1.speed
-//
-///--------------------------------
-int initializeKeyframeSequence(Axis* axis) {
-	int axisNumber = axis->getAxisNumber();
-
-	//Getting number of keyframes
-	//Constructing datastore command string
-	String command = "axis" + String(axisNumber) + ".numberofkeyframes";
-
-	//Convert command string to char array
-	command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-	debug(commandBuffer);
-	//Get values from datastore
-	//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-
-	//Convert value char buffer to String
-	String valueString = (String)valueBuffer;
-
-	//Convert value string to int
-	int numberOfKeyframes = valueString.toInt();
-	axis->setNumberOfKeyframes(numberOfKeyframes);
-	debug(String(numberOfKeyframes));
-
-	for (int i = 1; i <= numberOfKeyframes; i++) {
-		//read keyframe position
-		command = "axis" + String(axisNumber) + ".kf" + String(i) + ".position";
-		command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-		debug(commandBuffer);
-
-		//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-		String positionString = (String)valueBuffer;
-		unsigned long position = positionString.toInt();
-		debug(String(position));
-
-		//read keyframe speed
-		command = "axis" + String(axisNumber) + ".kf" + String(i) + ".speed";
-		command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-		debug(commandBuffer);
-		//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-		String speedString = (String)valueBuffer;
-		float speed = speedString.toFloat();
-		debug(String(speed));
-
-		//read keyframe accelleration
-		command = "axis" + String(axisNumber) + ".kf" + String(i) + ".acc";
-		command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-		debug(commandBuffer);
-		//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-		String accString = (String)valueBuffer;
-		float acc = accString.toFloat();
-		debug(String(acc));
-
-		//read keyframe deceleration
-		command = "axis" + String(axisNumber) + ".kf" + String(i) + ".dec";
-		command.toCharArray(commandBuffer, COMMANDBUFFERLENGTH);
-		debug(commandBuffer);
-		//Bridge.get(commandBuffer, valueBuffer, VALUEBUFFERLENGTH);
-		String decString = (String)valueBuffer;
-		float dec = decString.toFloat();
-		debug(String(dec));
-
-		axis->getKeyframe(i)->setPosition(position);
-		axis->getKeyframe(i)->setSpeed(speed);
-		axis->getKeyframe(i)->setAcc(acc);
-		axis->getKeyframe(i)->setDec(dec);
-	}
-	return 0;
 }
 
 /// --------------------------
