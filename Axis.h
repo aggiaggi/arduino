@@ -29,7 +29,14 @@ struct AxisConfig {
 class Axis :public AutoDriver {
 	// Program state 
 public:
-	enum MotionState { STOPPED, INIT, SEQUENCING, LASTKEYFRAME, MANUAL };
+	enum MotionState { 
+		STOPPED,		// program stopped
+		INITIALIZING,	// axes are moving to first keyframe position
+		INITCOMPLETE,	// initializytion complete and waiting for start
+		RUNNING,		// programm is running
+		LASTKEYFRAME,	// last keyframe in program
+		STOPPING		// axis is decelerating to stop position
+ 	};
 	enum ResultCode { SUCCESS, NOKEYFRAMES };
 
 	Axis(int position, int CSPin, int resetPin);
@@ -83,6 +90,7 @@ private:
 	long startSoftStop = 0L;                //start position
 	long endSoftStop = 0L;                  //end position
 	bool stopsEnabled = false;
+	long lastPosition = 0L;					// stores last position to detect movement
 
 	void debug(String message) { Serial.println(message); }
 };
