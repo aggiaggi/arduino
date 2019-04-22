@@ -7,7 +7,6 @@ Axis::Axis(int position, int CSPin, int resetPin, int busyPin) : AutoDriver(posi
 // Initialize axis
 int Axis::init(AxisConfig *conf)
 {
-	debug("Init");
 	this->axisConfig = conf;
 
 	// Calculate kval paramter
@@ -50,6 +49,11 @@ int Axis::init(AxisConfig *conf)
 		  " / ST_SLP: " + String(st_slp) +
 		  " / FN_SLP: " + String(fn_slp));
 
+	// Initialize keyframes
+	Keyframe kf = Keyframe(0,0,150,150);
+	for (int i = 1; i <= MAXKEYFRAMES; i++)
+		this->setKeyframe(kf, i+1);
+	
 	return 0;
 }
 
@@ -113,6 +117,15 @@ int Axis::addKeyframe(Keyframe kf)
 		}
 		numberOfKeyframes++;
 		return 1;
+	}
+}
+
+int Axis::setKeyframe(Keyframe kf, byte pos) {
+	if (pos > MAXKEYFRAMES)
+		return -1;
+	else {
+		this->keyframes[pos - 1] = kf;
+		return 0;
 	}
 }
 

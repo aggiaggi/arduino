@@ -49,7 +49,8 @@ public:
 
 	void setNumberOfKeyframes(int number) { this->numberOfKeyframes = number; }
 	int getNumberOfKeyframes() { return this->numberOfKeyframes; }
-	int addKeyframe(Keyframe kf);
+	int addKeyframe(Keyframe kf);	// add keyframe
+	int setKeyframe(Keyframe kf, byte position); // set keyframe at position
 	void printKeyframes();
 
 	MotionState getMotionState() { return motionState; }

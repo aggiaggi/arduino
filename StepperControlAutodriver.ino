@@ -31,6 +31,8 @@ struct MotorConfig motech;
 struct AxisConfig panTiltConfig;
 struct AxisConfig sliderConfig;
 
+double frames = 240;
+
 int counter = 0;
 
 void setup()
@@ -108,34 +110,41 @@ void setup()
 	axis3.setAxisNumber(3);
 	axis3.configStepMode(STEP_FS_128); //Step mode 1/128
 	axis3.init(&sliderConfig);
-
+/* 
 	//set up keyframes
 	for (int i = 0; i < 3; i++)
 		debug("Axis number: " + String(axes[i]->getAxisNumber()));
 
 	//Axis 1
-	Keyframe kf11 = Keyframe(0, -241, 150.0, 150.0);
-	Keyframe kf12 = Keyframe(800, -141, 150.0, 150.0);
+	Keyframe kf11 = Keyframe(0, -1000, 150.0, 150.0);
+	Keyframe kf12 = Keyframe(500, 1000, 150.0, 150.0);
 
 	debug("Setting keyframes for Axis 1");
 	debug(String(axis1.addKeyframe(kf11)));
 	debug(String(axis1.addKeyframe(kf12)));
 
 	//Axis 2
-	Keyframe kf21 = Keyframe(0, -925, 100.0, 100.0);
-	Keyframe kf22 = Keyframe(800, 624, 100.0, 100.0);
+	Keyframe kf21 = Keyframe(0, -800, 100.0, 100.0);
+	Keyframe kf22 = Keyframe(500, 800, 100.0, 100.0);
 
 	debug("Setting keyframes for Axis 2");
 	debug(String(axis2.addKeyframe(kf21)));
 	debug(String(axis2.addKeyframe(kf22)));
 
 	//Axis 3
-	Keyframe kf31 = Keyframe(0, 7087, 500.0, 500.0);
-	Keyframe kf32 = Keyframe(800, -7385, 500.0, 500.0);
+	Keyframe kf31 = Keyframe(0, 3000, 300.0, 300.0);
+	Keyframe kf32 = Keyframe(500, -3000, 300.0, 300.0);
 
 	debug("Setting keyframes for Axis 3");
 	debug(String(axis3.addKeyframe(kf31)));
 	debug(String(axis3.addKeyframe(kf32)));
+ */
+	axis1.setNumberOfKeyframes(2);
+	axis1.printKeyframes();
+	axis2.setNumberOfKeyframes(2);
+	axis2.printKeyframes();
+	axis3.setNumberOfKeyframes(2);
+	axis3.printKeyframes();
 
 	debug("Axes initialisation finished ...");
 }
@@ -185,9 +194,15 @@ void loop()
 	//Output position info
 	if (++counter >= 100)
 	{
+		Serial.write(27);       // ESC command
+		Serial.print("[2J");    // clear screen command
+		Serial.write(27);
+		Serial.print("[H");     // cursor to home command
 		debug("Axis1 pos: " + String(axis1.getFullPosition()) +
 			  " / STATE: " + String(axis1.getMotionState()));
+		
 		counter = 0;
+		
 	}
 
 	// Poll every 100ms
@@ -207,14 +222,10 @@ void process(String commandString)
 
 	//Parse axis
 	String token = parseCommand(&commandString);
+	debug("Token: " + token);
 
-	if (token == "init")
-	{
-	}
 	// is "start" command?
-	// arduino/start
-	//switch(tokrn)
-	else if (token == "start")
+	if (token == "start")
 	{
 
 		if ((axis1.getMotionState() == Axis::STOPPED) &&
@@ -264,6 +275,117 @@ void process(String commandString)
 		axis3.goHome();
 
 		return;
+	}
+	else if (token == "setkeyframe")
+	{
+		debug("Set Keyframe!");
+		//Parse next token
+		token = parseCommand(&commandString);
+
+		if (token == "1") {
+			// create Keyframes at frame 0 for all axes
+			Keyframe kf = Keyframe(0, axis1.getFullPosition(), 150.0, 150.0);
+			axis1.setKeyframe(kf, 1);
+			axis1.printKeyframes();
+
+			kf = Keyframe(0, axis2.getFullPosition(), 150.0, 150.0);
+			axis2.setKeyframe(kf, 1);
+			axis2.printKeyframes();
+
+			kf = Keyframe(0, axis3.getFullPosition(), 150.0, 150.0);
+			axis3.setKeyframe(kf, 1);
+			axis3.printKeyframes();
+
+			return;
+		} else if (token == "2") {
+			// create Keyframes at last frame for all axes
+			Keyframe kf = Keyframe(frames, axis1.getFullPosition(), 150.0, 150.0);
+			axis1.setKeyframe(kf, 2);
+			axis1.printKeyframes();
+
+			kf = Keyframe(frames, axis2.getFullPosition(), 150.0, 150.0);
+			axis2.setKeyframe(kf, 2);
+			axis2.printKeyframes();
+
+			kf = Keyframe(frames, axis3.getFullPosition(), 150.0, 150.0);
+			axis3.setKeyframe(kf, 2);
+			axis3.printKeyframes();
+
+			return;
+		}
+
+	}
+	else if (token == "gokeyframe")
+	{
+		//TODO clean up the following quick and dirty code !!! :)
+		debug("Goto Keyframe!");
+		//Parse next token
+		token = parseCommand(&commandString);
+		byte dir;
+		long pos;
+
+		if (token == "1") {
+			// Axis 1
+			pos = axis1.getKeyframe(1)->getPosition();
+			
+			if (pos >= axis1.getFullPosition())
+				dir = FWD;
+			else
+				dir = REV;
+			debug("Go Position " + String(pos) + " / Dir " + String(dir));
+			axis1.goToDir(dir, axis1.getMicroStepPosition(pos));
+
+			// Axis 2
+			pos = axis2.getKeyframe(1)->getPosition();
+			
+			if (pos >= axis2.getFullPosition())
+				dir = FWD;
+			else
+				dir = REV;
+			debug("Go Position " + String(pos) + " / Dir " + String(dir));
+			axis2.goToDir(dir, axis2.getMicroStepPosition(pos));
+
+			// Axis 3
+			pos = axis3.getKeyframe(1)->getPosition();
+	
+			if (pos >= axis3.getFullPosition())
+				dir = FWD;
+			else
+				dir = REV;
+			debug("Go Position " + String(pos) + " / Dir " + String(dir));
+			axis3.goToDir(dir, axis3.getMicroStepPosition(pos));
+		}
+		else if (token == "2") {
+			// Axis 1
+			pos = axis1.getKeyframe(2)->getPosition();
+			
+			if (pos >= axis1.getFullPosition())
+				dir = FWD;
+			else
+				dir = REV;
+			debug("Go Position " + String(pos) + " / Dir " + String(dir));
+			axis1.goToDir(dir, axis1.getMicroStepPosition(pos));
+
+			// Axis 2
+			pos = axis2.getKeyframe(2)->getPosition();
+			
+			if (pos >= axis2.getFullPosition())
+				dir = FWD;
+			else
+				dir = REV;
+			debug("Go Position " + String(pos) + " / Dir " + String(dir));
+			axis2.goToDir(dir, axis2.getMicroStepPosition(pos));
+
+			// Axis 3
+			pos = axis3.getKeyframe(2)->getPosition();
+			
+			if (pos >= axis3.getFullPosition())
+				dir = FWD;
+			else
+				dir = REV;
+			debug("Go Position " + String(pos) + " / Dir " + String(dir));
+			axis3.goToDir(dir, axis3.getMicroStepPosition(pos));
+		}
 	}
 
 	else if (token == "1")
@@ -482,18 +604,6 @@ void process(String commandString)
 	{
 		debug("Delete End Soft Stop!");
 		currentAxis->setEndSoftStop(0L);
-	}
-
-	//Set Keyframe command
-	else if (token == "setkeyframe")
-	{
-		debug("Set Keyframe!");
-	}
-
-	//Go Keyframe command
-	else if (token == "gokeyframe")
-	{
-		debug("Go Keyframe!");
 	}
 }
 
